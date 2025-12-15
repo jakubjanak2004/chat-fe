@@ -1,20 +1,52 @@
-import "./global.css";
-import {Pressable, Text, View} from 'react-native';
+import './global.css';
+import React from "react";
+import {NavigationContainer} from "@react-navigation/native";
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import {SafeAreaProvider} from "react-native-safe-area-context";
 
+import LoginScreen from "./screens/LoginScreen";
+import SignUpScreen from "./screens/SignUpScreen";
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-    console.log("App rendered ✅");
-
     return (
-        <View className="flex-1 items-center justify-center">
-            <Pressable className="bg-white rounded-xl p-4 mb-3">
-                <Text className="text-black font-semibold text-lg">
-                    Article title
-                </Text>
-                <Text className="text-neutral-500 text-sm mt-1">
-                    21.10., 10:46
-                </Text>
-            </Pressable>
-        </View>
+        <SafeAreaProvider>
+            <NavigationContainer>
+                <Stack.Navigator
+                    screenOptions={{
+                        headerShown: true,
+                        animation: "none",
+                        headerStyle: {
+                            backgroundColor: "rgb(10,10,10)",
+                        },
+                        headerTintColor: "#ffffff",
+                        headerTitleStyle: {
+                            fontSize: 24,
+                            fontWeight: "700",
+                        },
+                        headerTitleAlign: "left",
+                        headerShadowVisible: false,
+                    }}
+                >
+                    <Stack.Screen
+                        name="Login"
+                        component={LoginScreen}
+                        options={{
+                            title: "Log In",
+                            headerBackVisible: false,
+                        }}
+                    />
+                    <Stack.Screen
+                        name="Signup"
+                        component={SignUpScreen}
+                        options={{
+                            title: "Sign Up",
+                            headerBackVisible: false,
+                        }}
+                    />
+                </Stack.Navigator>
+            </NavigationContainer>
+        </SafeAreaProvider>
     );
 }
