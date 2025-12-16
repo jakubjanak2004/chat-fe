@@ -5,12 +5,13 @@ import {
 
 } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 import BottomTabBar from "../../components/BottomTabBar";
 import ChatRow, {Chat} from "./ChatRow";
 import {ReadState} from "../../components/icon/StatusIcon";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
+import FlatListDivider from "../../components/divider/FlatListDivider";
 
 // todo these are mocked data, will be removed by real backend data
 const chatsMock: Chat[] = [
@@ -78,9 +79,7 @@ export default function ChatsScreen() {
     return (
         <SafeAreaView className="flex-1 bg-black justify-start" edges={["bottom"]}>
             {/* Search Bar */}
-            <View className="pt-5 pl-3 pr-3">
-                <SearchTextInput />
-            </View>
+            <SearchTextInput/>
 
             {/* List of chats */}
             <FlatList
@@ -88,7 +87,7 @@ export default function ChatsScreen() {
                 keyExtractor={(item) => item.id}
                 renderItem={({item}) => <ChatRow item={item}/>}
                 ItemSeparatorComponent={() => (
-                    <View className="h-[1px] bg-neutral-800/40 mx-5"/>
+                    <FlatListDivider />
                 )}
                 className="flex-1"
             />

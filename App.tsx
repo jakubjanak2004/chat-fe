@@ -7,7 +7,7 @@ import {SafeAreaProvider} from "react-native-safe-area-context";
 import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 import ChatsScreen from "./screens/chats/ChatsScreen";
-import PeopleScreen from "./screens/PeopleScreen";
+import PeopleScreen from "./screens/people/PeopleScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
