@@ -6,6 +6,7 @@ import {SafeAreaProvider} from "react-native-safe-area-context";
 
 import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
+import ChatsScreen from "./screens/ChatsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,14 @@ export default function App() {
                         component={SignUpScreen}
                         options={{
                             title: "Sign Up",
+                            headerBackVisible: false,
+                        }}
+                    />
+                    <Stack.Screen
+                        name="Chats"
+                        component={ChatsScreen}
+                        options={{
+                            title: "Chats",
                             headerBackVisible: false,
                         }}
                     />

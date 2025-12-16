@@ -35,6 +35,7 @@ const LoginScreen = ({navigation, route}: LoginScreenProps) => {
 
                 <BlueButton
                     value="Log In"
+                    onPress={() => navigation.navigate("Chats")}
                 />
 
                 <TouchableOpacity className="mt-4 self-center">

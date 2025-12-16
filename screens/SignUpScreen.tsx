@@ -42,6 +42,7 @@ const SignUpScreen = ({navigation, route}: SignUpScreenProps) => {
 
                 <GreenButton
                     value="Sign Up"
+                    onPress={() => navigation.navigate("Chats")}
                 />
 
                 <Divider/>
