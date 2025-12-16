@@ -8,7 +8,7 @@ import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 import ChatsScreen from "./screens/chats/ChatsScreen";
 import PeopleScreen from "./screens/people/PeopleScreen";
-import SettingsScreen from "./screens/SettingsScreen";
+import SettingsScreen from "./screens/settings/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
 

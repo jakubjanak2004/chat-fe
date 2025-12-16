@@ -8,7 +8,7 @@ import {
 import {SafeAreaView} from "react-native-safe-area-context";
 
 import BottomTabBar from "../../components/BottomTabBar";
-import ChatRow, {Chat} from "./ChatRow";
+import ChatRow, {Chat} from "../../components/chat/ChatRow";
 import {ReadState} from "../../components/icon/StatusIcon";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
 import FlatListDivider from "../../components/divider/FlatListDivider";

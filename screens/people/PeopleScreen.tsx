@@ -4,7 +4,7 @@ import {SafeAreaView} from "react-native-safe-area-context";
 
 import BottomTabBar from "../../components/BottomTabBar";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
-import PeopleRow, {Person} from "./PeopleRow";
+import PeopleRow, {Person} from "../../components/people/PeopleRow";
 import FlatListDivider from "../../components/divider/FlatListDivider";
 
 // mock data

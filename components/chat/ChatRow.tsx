@@ -1,5 +1,5 @@
 import {Pressable, View, Image, Text} from "react-native";
-import StatusIcon, {ReadState} from "../../components/icon/StatusIcon";
+import StatusIcon, {ReadState} from "../icon/StatusIcon";
 
 export type Chat = {
     id: string;
