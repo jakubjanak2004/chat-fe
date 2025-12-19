@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {
     View,
     Text,
-    TouchableOpacity,
+    TouchableOpacity, Alert,
 } from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {GreenButton} from "../components/button/GreenButton";
@@ -13,6 +13,7 @@ import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
 import {http} from "../lib/http";
 import {useAuth} from "../context/AuthContext";
+import axios from "axios";
 
 type LoginScreenProps = {
     navigation: NativeStackNavigationProp<any>;
@@ -31,9 +32,13 @@ const LoginScreen = ({navigation, route}: LoginScreenProps) => {
             });
             const data = res.data;
             login(data.token, data);
-            navigation.navigate("Chats");
         } catch (error) {
             console.error(error);
+            if (!axios.isAxiosError(error)) return;
+            const status = error.response?.status;
+            if (status == 401) {
+                Alert.alert("The username or password is incorrect!");
+            }
         }
     }
 

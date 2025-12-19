@@ -14,7 +14,7 @@ type SignUpScreenProps = {
 }
 
 const SignUpScreen = ({navigation, route}: SignUpScreenProps) => {
-    return (
+    return <>
         <SafeAreaView
             className="flex-1 bg-[rgb(10,10,10)]"
             edges={["top"]}
@@ -53,7 +53,7 @@ const SignUpScreen = ({navigation, route}: SignUpScreenProps) => {
                 />
             </View>
         </SafeAreaView>
-    );
+    </>
 };
 
 export default SignUpScreen;

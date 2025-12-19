@@ -1,14 +1,14 @@
 import {NavigationContainer} from "@react-navigation/native";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import LoginScreen from "./screens/LoginScreen";
-import SignUpScreen from "./screens/SignUpScreen";
-import ChatsScreen from "./screens/chats/ChatsScreen";
-import PeopleScreen from "./screens/people/PeopleScreen";
-import SettingsScreen from "./screens/settings/SettingsScreen";
+import LoginScreen from "../screens/LoginScreen";
+import SignUpScreen from "../screens/SignUpScreen";
+import ChatsScreen from "../screens/chats/ChatsScreen";
+import PeopleScreen from "../screens/people/PeopleScreen";
+import SettingsScreen from "../screens/settings/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
 
-export default function Routes() {
+export default function AppNavigator() {
     return <>
         <NavigationContainer>
             <Stack.Navigator
@@ -27,22 +27,6 @@ export default function Routes() {
                     headerShadowVisible: false,
                 }}
             >
-                <Stack.Screen
-                    name="Login"
-                    component={LoginScreen}
-                    options={{
-                        title: "Log In",
-                        headerBackVisible: false,
-                    }}
-                />
-                <Stack.Screen
-                    name="Signup"
-                    component={SignUpScreen}
-                    options={{
-                        title: "Sign Up",
-                        headerBackVisible: false,
-                    }}
-                />
                 <Stack.Screen
                     name="Chats"
                     component={ChatsScreen}

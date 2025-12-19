@@ -1,8 +1,5 @@
-import axios, {
-    AxiosInstance,
-    AxiosRequestConfig,
-    InternalAxiosRequestConfig,
-} from "axios";
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import type { AxiosHeaders } from "axios";
 import { CONFIG } from "../config/env";
 
 type Token = string | undefined;
@@ -12,6 +9,10 @@ interface HttpClient {
     clearToken(): void;
     get token(): Token;
     readonly client: AxiosInstance;
+}
+
+function isAxiosHeaders(h: unknown): h is AxiosHeaders {
+    return !!h && typeof (h as AxiosHeaders).set === "function";
 }
 
 class Http implements HttpClient {
@@ -36,11 +37,11 @@ class Http implements HttpClient {
         );
     }
 
-    setToken(t?: string | null) {
+    setToken(t?: string | null): void {
         this._token = t ?? undefined;
     }
 
-    clearToken() {
+    clearToken(): void {
         this._token = undefined;
     }
 
@@ -48,17 +49,21 @@ class Http implements HttpClient {
         return this._token;
     }
 
-    private attachAuth = async (
+    private attachAuth = (
         cfg: InternalAxiosRequestConfig
-    ): Promise<InternalAxiosRequestConfig> => {
+    ): InternalAxiosRequestConfig => {
         const token = this._token;
+        if (!token) return cfg;
 
-        if (token) {
-            // safest way: merge headers (works across axios header types)
-            cfg.headers = {
-                ...cfg.headers,
-                Authorization: `Bearer ${token}`,
-            };
+        // Ensure headers exists
+        if (!cfg.headers) cfg.headers = {} as any;
+
+        // Support both AxiosHeaders and plain object headers
+        if (isAxiosHeaders(cfg.headers)) {
+            cfg.headers.set("Authorization", `Bearer ${token}`);
+        } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (cfg.headers as any).Authorization = `Bearer ${token}`;
         }
 
         return cfg;

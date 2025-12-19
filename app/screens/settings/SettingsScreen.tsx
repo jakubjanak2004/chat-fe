@@ -5,6 +5,8 @@ import BottomTabBar from "../../components/BottomTabBar";
 import FormTextInput from "../../components/textInput/FormTextInput";
 import LinkButton from "../../components/button/LinkButton";
 import {useAuth, User} from "../../context/AuthContext";
+import {RedButton} from "../../components/button/RedButton";
+import {useNavigation} from "@react-navigation/native";
 
 type Profile = {
     firstName: string;
@@ -18,15 +20,11 @@ function isValidEmail(v: string) {
 }
 
 export default function SettingsScreen() {
-    const {user} = useAuth();
+    const {user, logout} = useAuth();
 
-    const initial: Profile = {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-    }
+    const initial: Profile = user
 
-    const [draft, setDraft] = useState<Profile>(initial);
+    const [draft, setDraft] = useState<Profile>(user);
     const [saving, setSaving] = useState(false);
 
     const fullName = `${draft.firstName} ${draft.lastName}`.trim();
@@ -54,6 +52,22 @@ export default function SettingsScreen() {
     };
 
     const onCancel = () => setDraft(initial);
+
+    function onLogOut() {
+        Alert.alert(
+            "Log out?",
+            "Are you sure you want to log out?",
+            [
+                { text: "No", style: "cancel" },
+                {
+                    text: "Yes",
+                    style: "destructive",
+                    onPress: () => logout(),
+                },
+            ],
+            { cancelable: true }
+        );
+    }
 
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>
@@ -126,6 +140,15 @@ export default function SettingsScreen() {
                             Alert.alert("TODO", "Open Message Requests");
                         }}
                     />
+
+                    {/* divider */}
+                    <View className="mt-12 flex-row justify-center">
+                        <RedButton
+                            className="w-28"
+                            value="Log Out"
+                            onPress={() => onLogOut()}
+                        />
+                    </View>
                 </View>
             </View>
 

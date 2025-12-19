@@ -10,6 +10,7 @@ type BaseButtonProps = {
 export type SimpleButtonProps = {
     value: string;
     onPress?: () => void;
+    className?: string;
 };
 
 export function BaseButton({
