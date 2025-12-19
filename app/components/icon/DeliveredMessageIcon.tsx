@@ -1,4 +1,4 @@
-import DeliveredMessageSVG from "../../assets/icons/delivered-message-icon.svg";
+import DeliveredMessageSVG from "../../../assets/icons/delivered-message-icon.svg";
 import {STATUS_ICON_DIAMETER} from "./StatusIcon";
 
 export default function DeliveredMessageIcon() {

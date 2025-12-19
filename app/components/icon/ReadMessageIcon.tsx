@@ -1,4 +1,4 @@
-import ReadMessageSVG from "../../assets/icons/read-message-icon.svg";
+import ReadMessageSVG from "../../../assets/icons/read-message-icon.svg";
 import {STATUS_ICON_DIAMETER} from "./StatusIcon";
 
 export default function ReadMessageIcon() {

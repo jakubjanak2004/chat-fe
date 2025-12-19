@@ -1,4 +1,4 @@
-import SendingMessageSVG from "../../assets/icons/sending-message-icon.svg";
+import SendingMessageSVG from "../../../assets/icons/sending-message-icon.svg";
 import React from "react";
 import {STATUS_ICON_DIAMETER} from "./StatusIcon";
 

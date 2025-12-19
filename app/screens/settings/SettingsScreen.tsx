@@ -4,6 +4,7 @@ import {SafeAreaView} from "react-native-safe-area-context";
 import BottomTabBar from "../../components/BottomTabBar";
 import FormTextInput from "../../components/textInput/FormTextInput";
 import LinkButton from "../../components/button/LinkButton";
+import {useAuth, User} from "../../context/AuthContext";
 
 type Profile = {
     firstName: string;
@@ -17,17 +18,13 @@ function isValidEmail(v: string) {
 }
 
 export default function SettingsScreen() {
-    // todo load the profile from context
-    const initial: Profile = useMemo(
-        () => ({
-            firstName: "Bob",
-            lastName: "Smith",
-            email: "bob12346@gmail.com",
-            avatarUrl:
-                "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-        }),
-        []
-    );
+    const {user} = useAuth();
+
+    const initial: Profile = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+    }
 
     const [draft, setDraft] = useState<Profile>(initial);
     const [saving, setSaving] = useState(false);

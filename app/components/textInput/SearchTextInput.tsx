@@ -1,5 +1,5 @@
 import GrayTextInput from "./GrayTextInput";
-import SearchIcon from "../../assets/icons/search-icon.svg";
+import SearchIcon from "../../../assets/icons/search-icon.svg";
 import React from "react";
 import {TextInputProps, View} from "react-native";
 

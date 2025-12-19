@@ -2,9 +2,9 @@ import React from "react";
 import {View, Pressable} from "react-native";
 import {useNavigation, useRoute} from "@react-navigation/native";
 
-import MessageIcon from "../assets/icons/message-icon.svg";
-import PeopleIcon from "../assets/icons/people-icon.svg";
-import SettingsIcon from "../assets/icons/settings-icon.svg";
+import MessageIcon from "../../assets/icons/message-icon.svg";
+import PeopleIcon from "../../assets/icons/people-icon.svg";
+import SettingsIcon from "../../assets/icons/settings-icon.svg";
 
 const ACTIVE = "white";
 const INACTIVE = "#8E8E93";

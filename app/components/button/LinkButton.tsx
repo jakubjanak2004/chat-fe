@@ -1,6 +1,6 @@
 import {Pressable, Text, View} from "react-native";
 import React from "react";
-import RightArrow from "../../assets/icons/right-arrow-icon.svg"
+import RightArrow from "../../../assets/icons/right-arrow-icon.svg"
 
 export default function LinkButton({
                                        label,
