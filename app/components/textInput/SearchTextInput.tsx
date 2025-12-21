@@ -20,6 +20,7 @@ export default function SearchTextInput({
             <GrayTextInput
                 icon={<SearchIcon width={15} height={15} stroke="#8E8E93"/>}
                 placeholder="Search"
+                autoCapitalize="none"
                 {...rest}
             />
         </View>
