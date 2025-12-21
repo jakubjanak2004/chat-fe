@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react";
+import React, {useState} from "react";
 import {View, Text, Image, Pressable, Alert} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import BottomTabBar from "../../components/BottomTabBar";
@@ -6,7 +6,6 @@ import FormTextInput from "../../components/textInput/FormTextInput";
 import LinkButton from "../../components/button/LinkButton";
 import {useAuth, User} from "../../context/AuthContext";
 import {RedButton} from "../../components/button/RedButton";
-import {useNavigation} from "@react-navigation/native";
 
 type Profile = {
     firstName: string;
@@ -20,9 +19,7 @@ function isValidEmail(v: string) {
 }
 
 export default function SettingsScreen() {
-    const {user, logout} = useAuth();
-
-    const initial: Profile = user
+    const {user, logout, updateUser} = useAuth();
 
     const [draft, setDraft] = useState<Profile>(user);
     const [saving, setSaving] = useState(false);
@@ -30,9 +27,9 @@ export default function SettingsScreen() {
     const fullName = `${draft.firstName} ${draft.lastName}`.trim();
 
     const dirty =
-        draft.firstName !== initial.firstName ||
-        draft.lastName !== initial.lastName ||
-        draft.email !== initial.email;
+        draft.firstName !== user.firstName ||
+        draft.lastName !== user.lastName ||
+        draft.email !== user.email;
 
     const emailOk = isValidEmail(draft.email);
 
@@ -43,29 +40,30 @@ export default function SettingsScreen() {
         }
         setSaving(true);
         try {
-            // TODO: call backend PUT /me
-            await new Promise((r) => setTimeout(r, 450));
+            await updateUser(draft);
             Alert.alert("Saved", "Your profile was updated.");
+        } catch (error) {
+            console.error(error);
         } finally {
             setSaving(false);
         }
     };
 
-    const onCancel = () => setDraft(initial);
+    const onCancel = () => setDraft(user);
 
     function onLogOut() {
         Alert.alert(
             "Log out?",
             "Are you sure you want to log out?",
             [
-                { text: "No", style: "cancel" },
+                {text: "No", style: "cancel"},
                 {
                     text: "Yes",
                     style: "destructive",
                     onPress: () => logout(),
                 },
             ],
-            { cancelable: true }
+            {cancelable: true}
         );
     }
 
@@ -141,7 +139,6 @@ export default function SettingsScreen() {
                         }}
                     />
 
-                    {/* divider */}
                     <View className="mt-12 flex-row justify-center">
                         <RedButton
                             className="w-28"

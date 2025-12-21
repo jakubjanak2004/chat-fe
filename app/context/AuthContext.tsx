@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { http } from "../lib/http";
+import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
+import {http} from "../lib/http";
 
 type Token = string | null;
 
@@ -14,12 +14,13 @@ export interface User {
 export interface UpdateMeInput {
     firstName: string;
     lastName: string;
+    email: string;
 }
 
 export interface AuthContextValue {
     loggedIn: boolean;
     token: Token;
-    user: User | null;
+    user: User;
 
     login: (token: string, user: User) => void;
     logout: () => void;
@@ -29,9 +30,17 @@ export interface AuthContextValue {
 
 const AuthCtx = createContext<AuthContextValue | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+const emptyUser = {
+    userId: "",
+    username: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+}
+
+export function AuthProvider({children}: { children: React.ReactNode }) {
     const [token, setToken] = useState<Token>(null);
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User>(emptyUser);
 
     useEffect(() => {
         http.setToken(token);
@@ -49,14 +58,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         logout: () => {
             setToken(null);
-            setUser(null);
+            setUser(emptyUser);
         },
 
-        updateUser: async ({ firstName, lastName }: UpdateMeInput) => {
+        updateUser: async ({firstName, lastName, email}: UpdateMeInput) => {
+            await http.client.put('/users/me', {
+                firstName,
+                lastName,
+                email,
+            });
             // keep local state in sync
             setUser((prev) =>
                 prev
-                    ? { ...prev, firstName, lastName }
+                    ? {...prev, firstName, lastName, email}
                     : prev
             );
         },
