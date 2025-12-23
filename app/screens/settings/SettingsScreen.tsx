@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {View, Text, Image, Pressable, Alert} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import BottomTabBar from "../../components/BottomTabBar";
@@ -6,6 +6,11 @@ import FormTextInput from "../../components/textInput/FormTextInput";
 import LinkButton from "../../components/button/LinkButton";
 import {useAuth, User} from "../../context/AuthContext";
 import {RedButton} from "../../components/button/RedButton";
+import * as ImagePicker from "expo-image-picker";
+import {http} from "../../lib/http";
+import {CONFIG} from "../../config/env";
+import PersonIcon from "../../components/icon/PersonIcon";
+import ProfilePicDefault from "../../components/people/ProfilePicDefault";
 
 type Profile = {
     firstName: string;
@@ -19,7 +24,7 @@ function isValidEmail(v: string) {
 }
 
 export default function SettingsScreen() {
-    const {user, logout, updateUser} = useAuth();
+    const {user, logout, updateUser, updateProfilePicture} = useAuth();
 
     const [draft, setDraft] = useState<Profile>(user);
     const [saving, setSaving] = useState(false);
@@ -51,6 +56,58 @@ export default function SettingsScreen() {
 
     const onCancel = () => setDraft(user);
 
+    // todo, later move the request to the auth context, just testing it
+    async function pickAndUploadProfilePicture() {
+        // 1) pick image
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.9,
+        });
+
+        if (result.canceled) return;
+
+        const asset = result.assets[0];
+
+        const uri = asset.uri;
+
+        // 2) build form data
+        const form = new FormData();
+        form.append("file", {
+            uri,
+            // todo I dont like the naming here with the type
+            name: "profile.jpg",              // can be anything
+            type: asset.mimeType ?? "image/jpeg",
+        } as any);
+
+        // 3) send
+        try {
+            const res = await http.client.put("/users/me/profile-picture", form, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            updateProfilePicture({hasProfilePicture: true});
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const [profilePic, setProfilePic] = useState(<ProfilePicDefault />);
+    // todo the version is not used by backend, is here just to force reload
+    const [version, setVersion] = useState<number>(0);
+
+    useEffect(() => {
+        if (user.hasProfilePicture) {
+            const url = `${CONFIG.API_URL}/users/${user.username}/profile-picture?v=${version}`;
+            setProfilePic(<Image
+                source={{uri: url}}
+                style={{width: "100%", height: "100%"}}
+                resizeMode="cover"
+            />);
+            setVersion((prev) => prev + 1);
+        }
+    }, [user]);
+
     function onLogOut() {
         Alert.alert(
             "Log out?",
@@ -74,9 +131,7 @@ export default function SettingsScreen() {
 
                 <View className="items-center mt-4">
                     <View className="h-24 w-24 rounded-full overflow-hidden bg-neutral-700/60">
-                        {draft.avatarUrl ? (
-                            <Image source={{uri: draft.avatarUrl}} className="h-full w-full"/>
-                        ) : null}
+                        {profilePic}
                     </View>
 
                     <Text className="mt-4 text-white text-[22px] font-semibold">
@@ -129,6 +184,11 @@ export default function SettingsScreen() {
                         onChangeText={(v) => setDraft((p) => ({...p, email: v}))}
                         keyboardType="email-address"
                         autoCapitalize="none"
+                    />
+
+                    <LinkButton
+                        label="Change Profile Picture"
+                        onPress={() => pickAndUploadProfilePicture()}
                     />
 
                     <LinkButton

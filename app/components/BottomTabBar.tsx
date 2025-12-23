@@ -5,6 +5,7 @@ import {useNavigation, useRoute} from "@react-navigation/native";
 import MessageIcon from "../../assets/icons/message-icon.svg";
 import PeopleIcon from "../../assets/icons/people-icon.svg";
 import SettingsIcon from "../../assets/icons/settings-icon.svg";
+import {BlurView} from "expo-blur";
 
 const ACTIVE = "white";
 const INACTIVE = "#8E8E93";
@@ -16,8 +17,11 @@ export default function BottomTabBar() {
 
     return (
         <View className="absolute left-0 right-0 bottom-0">
-            {/* Background blur layer */}
-            <View className="h-28 bg-neutral-900/60"/>
+            <BlurView
+                className="h-28"
+                intensity={60}
+                tint="dark"
+            />
 
             <View className="absolute left-0 right-0 bottom-0 px-10 pb-8 pt-4">
                 <View className="flex-row items-center justify-between">

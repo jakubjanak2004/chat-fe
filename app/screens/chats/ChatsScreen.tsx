@@ -1,98 +1,157 @@
-import React, {useMemo, useState} from "react";
-import {
-    View,
-    FlatList,
-
-} from "react-native";
-
-import {SafeAreaView} from "react-native-safe-area-context";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useDebounce } from "use-debounce";
 
 import BottomTabBar from "../../components/BottomTabBar";
-import ChatRow, {Chat} from "../../components/chat/ChatRow";
-import {ReadState} from "../../components/icon/StatusIcon";
+import ChatRow, { Chat } from "../../components/chat/ChatRow";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
 import FlatListDivider from "../../components/divider/FlatListDivider";
-
-// todo these are mocked data, will be removed by real backend data
-const chatsMock: Chat[] = [
-    {
-        id: "1",
-        name: "Jacob Stanley",
-        preview: "You: What’s man!",
-        time: "9:40 AM",
-        avatar:
-            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-        state: ReadState.Delivered
-    },
-    {
-        id: "2",
-        name: "Andrew Parker",
-        preview: "You: Ok, thanks!",
-        time: "9:25 AM",
-        avatar:
-            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-        state: ReadState.Delivered
-    },
-    {
-        id: "3",
-        name: "Karen Castillo",
-        preview: "You: Ok, See you in To…",
-        time: "Fri",
-        avatar:
-            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80",
-        state: ReadState.Sending
-    },
-    {
-        id: "4",
-        name: "Maisy Humphrey",
-        preview: "Have a good day, Maisy!",
-        time: "Fri",
-        avatar:
-            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-        state: ReadState.Read
-    },
-    {
-        id: "5",
-        name: "Joshua Lawrence",
-        preview: "The business plan loo…",
-        time: "Thu",
-        avatar:
-            "https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=200&q=80",
-        state: ReadState.Sending
-    },
-];
+import { http } from "../../lib/http";
+import { CONFIG } from "../../config/env";
 
 export default function ChatsScreen() {
-    const [q, setQ] = useState("");
+    const [query, setQuery] = useState("");
+    const [debouncedQuery] = useDebounce(query, 350);
+    const normalizedQuery = useMemo(() => debouncedQuery.trim(), [debouncedQuery]);
 
-    // todo load data from REST backend
-    const data = useMemo(() => {
-        const s = q.trim().toLowerCase();
-        if (!s) return chatsMock;
-        return chatsMock.filter(
-            (c) =>
-                c.name.toLowerCase().includes(s) ||
-                c.preview.toLowerCase().includes(s)
-        );
-    }, [q]);
+    const [chats, setChats] = useState<Chat[]>([]);
+    const [page, setPage] = useState(0);
+    const [last, setLast] = useState(false);
+
+    const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const [listHeight, setListHeight] = useState(0);
+    const [contentHeight, setContentHeight] = useState(0);
+
+    // increasing number; responses that aren't the latest get ignored
+    const requestSeq = useRef(0);
+
+    async function loadAndReplacePage(pageToLoad: number) {
+        if (loading) return;
+
+        const seq = ++requestSeq.current;
+
+        try {
+            setLoading(true);
+
+            const res = await http.client.get("/chats/me", {
+                params: {
+                    query: normalizedQuery, // backend should search chat.name by this
+                    page: pageToLoad,
+                    size: CONFIG.PAGE_SIZE,
+                },
+            });
+
+            if (seq !== requestSeq.current) return;
+
+            const data = res.data;
+            setPage(data.number);
+            setLast(data.last);
+            setChats(data.content);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function loadPage(pageToLoad: number) {
+        if (loadingMore || last) return;
+
+        const seq = ++requestSeq.current;
+
+        try {
+            setLoadingMore(true);
+
+            const res = await http.client.get("/chats/me", {
+                params: {
+                    query: normalizedQuery,
+                    page: pageToLoad,
+                    size: CONFIG.PAGE_SIZE,
+                },
+            });
+
+            if (seq !== requestSeq.current) return;
+
+            const data = res.data;
+            setPage(data.number);
+            setLast(data.last);
+
+            setChats((prev) => [...prev, ...data.content]);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoadingMore(false);
+        }
+    }
+
+    const maybeLoadMore = () => {
+        // if list is not scrollable and more pages exist -> load next
+        const notScrollable = contentHeight > 0 && contentHeight <= listHeight;
+
+        if (notScrollable && !loading && !loadingMore && !last) {
+            loadPage(page + 1);
+        }
+    };
+
+    const onEndReached = () => {
+        if (loading || loadingMore || last) return;
+        loadPage(page + 1);
+    };
+
+    // when query changes -> reset and load first page
+    useEffect(() => {
+        setChats([]);
+        setPage(0);
+        setLast(false);
+        loadAndReplacePage(0);
+    }, [normalizedQuery]);
+
+    useEffect(() => {
+        maybeLoadMore();
+    }, [listHeight, contentHeight, last, loading, loadingMore, page]);
 
     return (
-        <SafeAreaView className="flex-1 bg-black justify-start" edges={["bottom"]}>
-            {/* Search Bar */}
-            <SearchTextInput/>
+        <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>
+            {/* Search */}
+            <SearchTextInput value={query} onChangeText={setQuery} />
 
-            {/* List of chats */}
+            {/* List */}
             <FlatList
-                data={data}
+                data={chats}
                 keyExtractor={(item) => item.id}
-                renderItem={({item}) => <ChatRow item={item}/>}
-                ItemSeparatorComponent={() => (
-                    <FlatListDivider />
-                )}
+                renderItem={({ item }) => <ChatRow item={item} />}
+                ItemSeparatorComponent={() => <FlatListDivider />}
                 className="flex-1"
+                onEndReached={onEndReached}
+                onEndReachedThreshold={0.6}
+                onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
+                onContentSizeChange={(_, h) => setContentHeight(h)}
+                ListEmptyComponent={
+                    loading ? (
+                        <View className="items-center justify-center py-10">
+                            <ActivityIndicator />
+                        </View>
+                    ) : (
+                        <View className="items-center justify-center py-10">
+                            <Text className="text-gray-400">
+                                {normalizedQuery ? "No chats found." : "No chats yet."}
+                            </Text>
+                        </View>
+                    )
+                }
+                ListFooterComponent={
+                    loadingMore ? (
+                        <View className="py-4">
+                            <ActivityIndicator />
+                        </View>
+                    ) : null
+                }
             />
 
-            <BottomTabBar/>
+            <BottomTabBar />
         </SafeAreaView>
     );
 }

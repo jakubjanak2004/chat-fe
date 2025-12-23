@@ -1,16 +1,18 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
-import {ActivityIndicator, FlatList, Text, View} from "react-native";
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
+import {ActivityIndicator, FlatList, Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {useDebounce} from "use-debounce";
+import {CONFIG} from '../../config/env'
 
 import BottomTabBar from "../../components/BottomTabBar";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
-import PeopleRow, {Person} from "../../components/people/PeopleRow";
+import PersonRow, {Person} from "../../components/people/PersonRow";
 import FlatListDivider from "../../components/divider/FlatListDivider";
 import {http} from "../../lib/http";
+import {useNavigation} from "@react-navigation/native";
+import AddGroupIcon from "../../components/icon/AddGroupIcon";
 
-const PAGE_SIZE = 10;
-
+// todo refactor the similar code with the chats page into common Hook
 export default function PeopleScreen() {
     const [query, setQuery] = useState("");
     const [debouncedQuery] = useDebounce(query, 350);
@@ -30,6 +32,8 @@ export default function PeopleScreen() {
     // increasing number; responses that aren't the latest get ignored
     const requestSeq = useRef(0);
 
+    const navigation = useNavigation();
+
     async function loadAndReplacePage(pageToLoad: number) {
         if (loading) return;
 
@@ -42,7 +46,7 @@ export default function PeopleScreen() {
                 params: {
                     query: normalizedQuery,
                     page: pageToLoad,
-                    size: PAGE_SIZE,
+                    size: CONFIG.PAGE_SIZE,
                 },
             });
 
@@ -73,7 +77,7 @@ export default function PeopleScreen() {
                 params: {
                     query: normalizedQuery,
                     page: pageToLoad,
-                    size: PAGE_SIZE,
+                    size: CONFIG.PAGE_SIZE,
                 },
             });
 
@@ -103,6 +107,11 @@ export default function PeopleScreen() {
     };
 
     // when query changes (debounced) -> reset and load first page
+    const onEndReached = () => {
+        if (loading || loadingMore || last) return;
+        loadPage(page + 1);
+    };
+
     useEffect(() => {
         setPeople([]);
         setPage(0);
@@ -110,15 +119,32 @@ export default function PeopleScreen() {
         loadAndReplacePage(0);
     }, [normalizedQuery]);
 
+
     useEffect(() => {
         maybeLoadMore();
     }, [listHeight, contentHeight, last, loading, loadingMore, page]);
 
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <Pressable
+                    // todo for some reason the styles do not work here
+                    // className="mr-4 h-100 w-100 items-center justify-center rounded-full"
+                    style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 9999,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                    onPress={() => navigation.navigate("CreateGroup")}
+                >
+                    <AddGroupIcon/>
+                </Pressable>
+            ),
+        });
+    }, [navigation]);
 
-    const onEndReached = () => {
-        if (loading || loadingMore || last) return;
-        loadPage(page + 1);
-    };
 
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>
@@ -129,7 +155,7 @@ export default function PeopleScreen() {
             <FlatList
                 data={people}
                 keyExtractor={(item) => item.username}
-                renderItem={({item}) => <PeopleRow item={item}/>}
+                renderItem={({item}) => <PersonRow item={item}/>}
                 ItemSeparatorComponent={() => <FlatListDivider/>}
                 className="flex-1"
                 onEndReached={onEndReached}

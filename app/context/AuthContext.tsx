@@ -9,12 +9,17 @@ export interface User {
     email: string;
     firstName: string;
     lastName: string;
+    hasProfilePicture: boolean;
 }
 
 export interface UpdateMeInput {
     firstName: string;
     lastName: string;
     email: string;
+}
+
+export interface ProfilePicUpdate {
+    hasProfilePicture: boolean;
 }
 
 export interface AuthContextValue {
@@ -26,6 +31,7 @@ export interface AuthContextValue {
     logout: () => void;
 
     updateUser: (input: UpdateMeInput) => Promise<void>;
+    updateProfilePicture: (input: ProfilePicUpdate) => void;
 }
 
 const AuthCtx = createContext<AuthContextValue | undefined>(undefined);
@@ -36,6 +42,7 @@ const emptyUser = {
     email: "",
     firstName: "",
     lastName: "",
+    hasProfilePicture: false,
 }
 
 export function AuthProvider({children}: { children: React.ReactNode }) {
@@ -73,6 +80,10 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
                     ? {...prev, firstName, lastName, email}
                     : prev
             );
+        },
+
+        updateProfilePicture: ({ hasProfilePicture }: ProfilePicUpdate) => {
+            setUser(prev => ({ ...prev, hasProfilePicture }));
         },
     }), [token, user]);
 
