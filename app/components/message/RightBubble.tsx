@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { Message } from "../message/MessageRow";
+import { Message } from "./MessageRow";
 
 type Props = {
     item: Message;

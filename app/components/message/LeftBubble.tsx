@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image } from "react-native";
-import { Message } from "../message/MessageRow";
+import { Message } from "./MessageRow";
 import { CONFIG } from "../../config/env";
 import ProfilePicDefault from "../people/ProfilePicDefault";
 
@@ -9,16 +9,15 @@ type Props = {
 };
 
 function LeftBubble({ item }: Props) {
-    const profilePic = item.sender.hasProfilePicture ? (
-        <Image
+    let profilePic = <ProfilePicDefault />;
+    if (item.sender.hasProfilePicture) {
+        profilePic = <Image
             source={{
                 uri: `${CONFIG.API_URL}/users/${item.sender.username}/profile-picture`,
             }}
             className="rounded-full"
         />
-    ) : (
-        <ProfilePicDefault />
-    );
+    }
 
     return (
         <View className="flex-row items-end px-4 mb-3">

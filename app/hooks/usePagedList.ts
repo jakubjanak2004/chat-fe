@@ -64,7 +64,6 @@ export function usePagedList<T>(
                 setLoading(false);
             }
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [fetchPage, loading, ...deps]
     );
 
@@ -88,7 +87,6 @@ export function usePagedList<T>(
                 setLoadingMore(false);
             }
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [fetchPage, loadingMore, last, ...deps]
     );
 
@@ -124,17 +122,16 @@ export function usePagedList<T>(
     // reset when deps change (query/id etc.)
     useEffect(() => {
         resetAndLoadFirstPage();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, deps);
 
-    // auto-fill if not scrollable
+    // autofill if not scrollable
     useEffect(() => {
         maybeLoadMore();
     }, [maybeLoadMore]);
 
     return {
         items,
-        setItems, // useful for optimistic updates (messages)
+        setItems,
         page,
         last,
         loading,

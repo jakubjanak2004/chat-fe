@@ -1,5 +1,4 @@
 import {Pressable, View, Image, Text} from "react-native";
-import StatusIcon, {ReadState} from "../icon/StatusIcon";
 import {Message} from "../message/MessageRow";
 import {useNavigation} from "@react-navigation/native";
 import {Person} from '../people/PersonRow';
@@ -13,7 +12,11 @@ export type Chat = {
     avatar?: string;
 };
 
-export default function ChatRow({item}: { item: Chat }) {
+type Props = {
+    item: Chat
+}
+
+export default function ChatRow({item}: Props) {
     const navigation = useNavigation();
 
     let lastMessageText = <Text/>;
@@ -34,6 +37,11 @@ export default function ChatRow({item}: { item: Chat }) {
         </Text>
     }
 
+    let avatarImage = <ProfilePicDefault/>
+    if (item.avatar) {
+        avatarImage = <Image source={{uri: item.avatar}} className="h-full w-full"/>
+    }
+
     async function onChatRowPressed() {
         // @ts-ignore
         navigation.navigate('Chat', {id: item.id});
@@ -45,11 +53,7 @@ export default function ChatRow({item}: { item: Chat }) {
             className="flex-row items-center px-5 py-3 active:opacity-80"
         >
             <View className="h-14 w-14 rounded-full bg-neutral-700/60 overflow-hidden">
-                {item.avatar ? (
-                    <Image source={{uri: item.avatar}} className="h-full w-full"/>
-                ) : (
-                    <ProfilePicDefault/>
-                )}
+                {avatarImage}
             </View>
 
             <View className="flex-1 ml-4">
@@ -57,11 +61,6 @@ export default function ChatRow({item}: { item: Chat }) {
                 <View className="flex-row items-center mt-1">
                     {lastMessageText}
                 </View>
-            </View>
-
-            <View className="ml-3">
-                {/* todo do not handle the message icon right now */}
-                {/*<StatusIcon state={item.state}/>*/}
             </View>
         </Pressable>
     </>

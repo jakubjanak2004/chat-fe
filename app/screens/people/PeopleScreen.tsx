@@ -28,7 +28,7 @@ export default function PeopleScreen() {
                 size: CONFIG.PAGE_SIZE,
             },
         });
-        return res.data; // expects Spring Page: {content, number, last, ...}
+        return res.data;
     };
 
     const {

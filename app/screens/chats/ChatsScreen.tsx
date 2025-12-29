@@ -17,7 +17,6 @@ export default function ChatsScreen() {
     const [debouncedQuery] = useDebounce(query, 350);
     const normalizedQuery = useMemo(() => debouncedQuery.trim(), [debouncedQuery]);
 
-    // fetcher for paged hooks
     const fetchChatsPage = async (page: number) => {
         const res = await http.client.get("/chats/me", {
             params: {
@@ -26,7 +25,7 @@ export default function ChatsScreen() {
                 size: CONFIG.PAGE_SIZE,
             },
         });
-        return res.data; // Spring Page
+        return res.data;
     };
 
     const {

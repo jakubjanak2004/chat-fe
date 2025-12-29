@@ -16,15 +16,29 @@ export type Message = {
 export type RenderMessage = {
     msg: Message;
     showSep: boolean;
-    label: string;
+    created: string;
     isMine: boolean;
 };
 
+function formatTimeLabel(ms: number) {
+    const d = new Date(ms);
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+}
+
 function MessageRow({row}: { row: RenderMessage }) {
+    const createdDate = formatTimeLabel(new Date(row.created).getTime())
+    let bubble;
+    if (row.isMine) {
+        bubble = <RightBubble item={row.msg}/>;
+    } else {
+        bubble = <LeftBubble item={row.msg}/>;
+    }
     return <>
         <View>
-            {row.showSep && <TimeSeparator label={row.label}/>}
-            {row.isMine ? <RightBubble item={row.msg}/> : <LeftBubble item={row.msg}/>}
+            {row.showSep && <TimeSeparator label={createdDate}/>}
+            {bubble}
         </View>
     </>;
 }
