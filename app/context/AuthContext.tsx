@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {http} from "../lib/http";
+import {http} from "../hooks/http";
 
 type Token = string | null;
 

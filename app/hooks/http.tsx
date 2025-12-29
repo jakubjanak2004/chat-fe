@@ -21,7 +21,7 @@ class Http implements HttpClient {
     public readonly client: AxiosInstance;
 
     // prevents showing multiple alerts if many requests fail at once
-    // allows the pop up to be shown only after user pressed Ok
+    // allows the pop-up to be shown only after user pressed Ok
     private networkAlertShown = false;
 
     constructor() {

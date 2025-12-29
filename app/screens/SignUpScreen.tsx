@@ -7,7 +7,7 @@ import GrayTextInput from "../components/textInput/GrayTextInput";
 import Divider from "../components/divider/Divider";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
-import {http} from "../lib/http";
+import {http} from "../hooks/http";
 import {useAuth} from "../context/AuthContext";
 
 type SignUpScreenProps = {

@@ -7,7 +7,7 @@ import LinkButton from "../../components/button/LinkButton";
 import {useAuth, User} from "../../context/AuthContext";
 import {RedButton} from "../../components/button/RedButton";
 import * as ImagePicker from "expo-image-picker";
-import {http} from "../../lib/http";
+import {http} from "../../hooks/http";
 import {CONFIG} from "../../config/env";
 import PersonIcon from "../../components/icon/PersonIcon";
 import ProfilePicDefault from "../../components/people/ProfilePicDefault";

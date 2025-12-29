@@ -5,6 +5,7 @@ import SignUpScreen from "../screens/SignUpScreen";
 import ChatsScreen from "../screens/chats/ChatsScreen";
 import PeopleScreen from "../screens/people/PeopleScreen";
 import SettingsScreen from "../screens/settings/SettingsScreen";
+import ChatScreen from "../screens/chats/ChatScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +34,13 @@ export default function AppNavigator() {
                     options={{
                         title: "Chats",
                         headerBackVisible: false,
+                    }}
+                />
+                <Stack.Screen
+                    name="Chat"
+                    component={ChatScreen}
+                    options={{
+                        title: "Chat",
                     }}
                 />
                 <Stack.Screen

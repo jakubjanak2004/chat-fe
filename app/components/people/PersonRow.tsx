@@ -34,7 +34,7 @@ export default function PersonRow({
             onPress={() => onPress?.(item)}
             className="flex-row items-center px-5 py-4 active:opacity-80"
         >
-            <View className="h-12 w-12 rounded-full bg-neutral-700/60 overflow-hidden">
+            <View className="h-12 w-12 rounded-full overflow-hidden">
                 {profilePic}
             </View>
 

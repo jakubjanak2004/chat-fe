@@ -1,117 +1,50 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDebounce } from "use-debounce";
+import { useFocusEffect } from "@react-navigation/core";
 
 import BottomTabBar from "../../components/BottomTabBar";
 import ChatRow, { Chat } from "../../components/chat/ChatRow";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
 import FlatListDivider from "../../components/divider/FlatListDivider";
-import { http } from "../../lib/http";
+import { http } from "../../hooks/http";
 import { CONFIG } from "../../config/env";
+import {usePagedList} from "../../hooks/usePagedList";
 
 export default function ChatsScreen() {
     const [query, setQuery] = useState("");
     const [debouncedQuery] = useDebounce(query, 350);
     const normalizedQuery = useMemo(() => debouncedQuery.trim(), [debouncedQuery]);
 
-    const [chats, setChats] = useState<Chat[]>([]);
-    const [page, setPage] = useState(0);
-    const [last, setLast] = useState(false);
-
-    const [loading, setLoading] = useState(false);
-    const [loadingMore, setLoadingMore] = useState(false);
-
-    const [listHeight, setListHeight] = useState(0);
-    const [contentHeight, setContentHeight] = useState(0);
-
-    // increasing number; responses that aren't the latest get ignored
-    const requestSeq = useRef(0);
-
-    async function loadAndReplacePage(pageToLoad: number) {
-        if (loading) return;
-
-        const seq = ++requestSeq.current;
-
-        try {
-            setLoading(true);
-
-            const res = await http.client.get("/chats/me", {
-                params: {
-                    query: normalizedQuery, // backend should search chat.name by this
-                    page: pageToLoad,
-                    size: CONFIG.PAGE_SIZE,
-                },
-            });
-
-            if (seq !== requestSeq.current) return;
-
-            const data = res.data;
-            setPage(data.number);
-            setLast(data.last);
-            setChats(data.content);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function loadPage(pageToLoad: number) {
-        if (loadingMore || last) return;
-
-        const seq = ++requestSeq.current;
-
-        try {
-            setLoadingMore(true);
-
-            const res = await http.client.get("/chats/me", {
-                params: {
-                    query: normalizedQuery,
-                    page: pageToLoad,
-                    size: CONFIG.PAGE_SIZE,
-                },
-            });
-
-            if (seq !== requestSeq.current) return;
-
-            const data = res.data;
-            setPage(data.number);
-            setLast(data.last);
-
-            setChats((prev) => [...prev, ...data.content]);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoadingMore(false);
-        }
-    }
-
-    const maybeLoadMore = () => {
-        // if list is not scrollable and more pages exist -> load next
-        const notScrollable = contentHeight > 0 && contentHeight <= listHeight;
-
-        if (notScrollable && !loading && !loadingMore && !last) {
-            loadPage(page + 1);
-        }
+    // fetcher for paged hooks
+    const fetchChatsPage = async (page: number) => {
+        const res = await http.client.get("/chats/me", {
+            params: {
+                query: normalizedQuery,
+                page,
+                size: CONFIG.PAGE_SIZE,
+            },
+        });
+        return res.data; // Spring Page
     };
 
-    const onEndReached = () => {
-        if (loading || loadingMore || last) return;
-        loadPage(page + 1);
-    };
+    const {
+        items: chats,
+        loading,
+        loadingMore,
+        onEndReached,
+        onLayout,
+        onContentSizeChange,
+        loadAndReplacePage,
+    } = usePagedList<Chat>(fetchChatsPage, [normalizedQuery]);
 
-    // when query changes -> reset and load first page
-    useEffect(() => {
-        setChats([]);
-        setPage(0);
-        setLast(false);
-        loadAndReplacePage(0);
-    }, [normalizedQuery]);
-
-    useEffect(() => {
-        maybeLoadMore();
-    }, [listHeight, contentHeight, last, loading, loadingMore, page]);
+    // refresh when coming back to this screen
+    useFocusEffect(
+        useCallback(() => {
+            loadAndReplacePage(0);
+        }, [loadAndReplacePage])
+    );
 
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>
@@ -127,8 +60,8 @@ export default function ChatsScreen() {
                 className="flex-1"
                 onEndReached={onEndReached}
                 onEndReachedThreshold={0.6}
-                onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
-                onContentSizeChange={(_, h) => setContentHeight(h)}
+                onLayout={onLayout}
+                onContentSizeChange={onContentSizeChange}
                 ListEmptyComponent={
                     loading ? (
                         <View className="items-center justify-center py-10">
