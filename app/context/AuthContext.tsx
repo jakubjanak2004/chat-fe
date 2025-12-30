@@ -1,5 +1,6 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
 import {http} from "../hooks/http";
+import {stompService} from "../ws/stompService";
 
 type Token = string | null;
 
@@ -51,6 +52,19 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
 
     useEffect(() => {
         http.setToken(token);
+    }, [token]);
+
+    // Connect/disconnect websocket depending on auth state
+    useEffect(() => {
+        if (token) {
+            stompService.connect(
+                () => token,
+                () => console.log("WS connected"),
+                (err) => console.warn("WS error", err),
+            );
+        } else {
+            stompService.disconnect();
+        }
     }, [token]);
 
     const value = useMemo<AuthContextValue>(() => ({

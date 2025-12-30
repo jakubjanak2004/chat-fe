@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     View,
     FlatList,
@@ -7,18 +7,20 @@ import {
     Pressable,
     ActivityIndicator,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/core";
+// @ts-ignore
+import { Ionicons } from "@expo/vector-icons";
+
 import MessageRow, { Message, RenderMessage } from "../../components/message/MessageRow";
 import { useAuth } from "../../context/AuthContext";
 import { http } from "../../hooks/http";
 import { CONFIG } from "../../config/env";
-// @ts-ignore
-import { Ionicons } from "@expo/vector-icons";
+import { useChatEvents } from "../../context/ChatsEventsContext";
+import { usePagedList } from "../../hooks/usePagedList"; // <- adjust import path
 
-import { usePagedList } from "../../hooks/usePagedList";
-
-function isDifferentDay(aMs: number, bMs: number) {
-    const a = new Date(aMs);
-    const b = new Date(bMs);
+function isDifferentDay(aMillis: number, bMillis: number) {
+    const a = new Date(aMillis);
+    const b = new Date(bMillis);
     return (
         a.getFullYear() !== b.getFullYear() ||
         a.getMonth() !== b.getMonth() ||
@@ -35,88 +37,105 @@ function shouldShowTimeSeparator(messages: Message[], index: number) {
     const nextMs = new Date(nextOlder.created).getTime();
 
     if (isDifferentDay(currMs, nextMs)) return true;
-
     return (currMs - nextMs) / (1000 * 60) >= CONFIG.SEPARATOR_GAP_MIN;
 }
 
 export default function ChatScreen({ route }: any) {
     const { user } = useAuth();
     const { id } = route.params as { id: string };
+    const {
+        setActiveChatId,
+        markChatRead,
+        messagesByChatId,
+        upsertMessages
+    } = useChatEvents();
+
     const [input, setInput] = useState("");
     const listRef = useRef<FlatList<RenderMessage>>(null);
     const lastLatestIdRef = useRef<string | null>(null);
 
-    const fetchMessagesPage = async (page: number) => {
+    // Messages live in global context (WS updates go there)
+    const messages: Message[] = useMemo(
+        () => (messagesByChatId[id] ?? []) as Message[],
+        [messagesByChatId, id]
+    );
+
+    // focus: active chat + clear unread
+    useFocusEffect(
+        useCallback(() => {
+            setActiveChatId(id);
+            markChatRead(id);
+            return () => setActiveChatId(null);
+        }, [id])
+    );
+
+    /**
+     * Paging hook drives REST loads, but we "materialize" results into the global store
+     * via mergeReplace/mergeAppend.
+     *
+     * IMPORTANT: fetchPage MUST return Spring {content, number, last}
+     */
+    const fetchPage = useCallback(async (page: number) => {
         const res = await http.client.get(`/chats/${id}/messages`, {
-            params: {
-                page,
-                size: CONFIG.PAGE_SIZE,
-                sort: "created,desc",
-            },
+            params: { page, size: CONFIG.PAGE_SIZE, sort: "created,desc" },
         });
-        return res.data;
-    };
+        // Spring Page shape
+        return {
+            content: res.data?.content ?? [],
+            number: res.data?.number ?? page,
+            last: res.data?.last ?? true,
+        };
+    }, [id]);
 
     const {
-        items: messages,
-        setItems: setMessages,
         loading,
         loadingMore,
         onEndReached,
         onLayout,
         onContentSizeChange,
-    } = usePagedList<Message>(fetchMessagesPage, [id], {
-        mergeAppend: (prev, incoming) => {
-            const seen = new Set(prev.map((m) => m.id));
-            const filtered = incoming.filter((m) => !seen.has(m.id));
-            return [...prev, ...filtered];
-        },
-    });
+    } = usePagedList<Message>(
+        fetchPage,
+        [id],
+        {
+            // push fetched pages into your global store; the hook's own items are ignored
+            mergeReplace: (incoming) => {
+                upsertMessages(id, incoming, "replace");
+                return incoming;
+            },
+            mergeAppend: (prev, incoming) => {
+                upsertMessages(id, incoming, "append");
+                return [...prev, ...incoming];
+            },
+            // prevents the “empty list => infinite load” problem
+            autoFillIfNotScrollable: false,
+        }
+    );
 
-    // always stay scrolled down when messages change
+    // stay scrolled down when newest message changes
     useEffect(() => {
         if (messages.length === 0) return;
+        if (!listRef.current) return;
 
         const latestId = messages[0].id;
-
         if (lastLatestIdRef.current && lastLatestIdRef.current !== latestId) {
-            listRef.current?.scrollToOffset({ offset: 0, animated: true });
+            listRef.current.scrollToOffset({ offset: 0, animated: true });
         }
-
         lastLatestIdRef.current = latestId;
     }, [messages]);
 
     async function sendMessage() {
         const text = input.trim();
         if (!text) return;
-
-        const tempId = `temp-${Date.now()}`;
-
-        const optimistic: Message = {
-            id: tempId,
-            responseToId: null,
-            content: text,
-            created: new Date().toISOString(),
-            sender: user,
-        };
-
-        setMessages((prev) => [optimistic, ...prev]);
         setInput("");
 
         try {
-            const res = await http.client.post(`/chats/${id}/messages`, {
-                content: text,
-            });
-
-            setMessages((prev) =>
-                prev.map((m) => (m.id === tempId ? res.data : m))
-            );
-        } catch {
-            setMessages((prev) => prev.filter((m) => m.id !== tempId));
+            await http.client.post(`/chats/${id}/messages`, { content: text });
+        } catch (error) {
+            console.error(error);
         }
     }
 
-    // memorizing the rows data
+    // rows for rendering
     const rows: RenderMessage[] = useMemo(() => {
         const myUsername = user.username;
         return messages.map((msg, index) => ({
@@ -128,9 +147,9 @@ export default function ChatScreen({ route }: any) {
     }, [messages, user.username]);
 
     const renderItem = useCallback(
-        ({ item }: { item: RenderMessage }) =>
-            <MessageRow row={item} />
-        , []);
+        ({ item }: { item: RenderMessage }) => <MessageRow row={item} />,
+        []
+    );
 
     return (
         <View className="flex-1 bg-black">
@@ -145,10 +164,7 @@ export default function ChatScreen({ route }: any) {
                     onEndReachedThreshold={0.2}
                     onLayout={onLayout}
                     onContentSizeChange={onContentSizeChange}
-                    maintainVisibleContentPosition={{
-                        minIndexForVisible: 1,
-                        autoscrollToTopThreshold: 50,
-                    }}
+                    maintainVisibleContentPosition={{ minIndexForVisible: 1, autoscrollToTopThreshold: 50 }}
                     renderItem={renderItem}
                     removeClippedSubviews
                     windowSize={10}
@@ -196,7 +212,7 @@ export default function ChatScreen({ route }: any) {
                                 name="paper-plane"
                                 size={18}
                                 color={input.trim() ? "white" : "rgba(255,255,255,0.6)"}
-                                style={{ transform: [{ rotate: "-45deg" }] }}
+                                style={{ transform: [{ rotate: "-20deg" }] }}
                             />
                         </Pressable>
                     </View>

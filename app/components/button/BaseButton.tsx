@@ -24,8 +24,7 @@ export function BaseButton({
             onPress();
         }
     }
-    return (
-        <TouchableOpacity
+    return <TouchableOpacity
             className={`rounded-xl py-3 mt-1 items-center ${className ?? ""}`}
             {...touchableProps}
             onPress={callOnPress}
@@ -33,6 +32,6 @@ export function BaseButton({
             <Text className="text-white font-semibold text-base">
                 {value}
             </Text>
-        </TouchableOpacity>
-    );
+        </TouchableOpacity>;
+
 }

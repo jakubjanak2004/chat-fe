@@ -8,6 +8,7 @@ import LeftBubble from "./LeftBubble";
 export type Message = {
     id: string,
     responseToId: string | null,
+    chatId: string,
     sender: Person,
     created: string,
     content: string,

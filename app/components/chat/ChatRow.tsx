@@ -12,9 +12,8 @@ export type Chat = {
     avatar?: string;
 };
 
-type Props = {
-    item: Chat
-}
+type Props = { item: Chat; lastMessage?: any; unreadCount?: number; }
+
 
 export default function ChatRow({item}: Props) {
     const navigation = useNavigation();
