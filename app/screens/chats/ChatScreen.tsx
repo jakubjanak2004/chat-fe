@@ -79,7 +79,6 @@ export default function ChatScreen({ route }: any) {
         const res = await http.client.get(`/chats/${id}/messages`, {
             params: { page, size: CONFIG.PAGE_SIZE, sort: "created,desc" },
         });
-        // Spring Page shape
         return {
             content: res.data?.content ?? [],
             number: res.data?.number ?? page,
@@ -88,6 +87,7 @@ export default function ChatScreen({ route }: any) {
     }, [id]);
 
     const {
+        items: pagedItems,
         loading,
         loadingMore,
         onEndReached,
@@ -97,19 +97,21 @@ export default function ChatScreen({ route }: any) {
         fetchPage,
         [id],
         {
-            // push fetched pages into your global store; the hook's own items are ignored
-            mergeReplace: (incoming) => {
-                upsertMessages(id, incoming, "replace");
-                return incoming;
-            },
-            mergeAppend: (prev, incoming) => {
-                upsertMessages(id, incoming, "append");
-                return [...prev, ...incoming];
-            },
-            // prevents the “empty list => infinite load” problem
+            mergeReplace: (incoming) => incoming,
+            mergeAppend: (prev, incoming) => [...prev, ...incoming],
             autoFillIfNotScrollable: false,
         }
     );
+
+    useEffect(() => {
+        // todo logging the pagedItems messages
+        // for(const item of pagedItems) {
+        //     console.log(item);
+        //     console.log()
+        // }
+        upsertMessages(id, pagedItems, "replace");
+    }, [id, pagedItems]);
+
 
     // stay scrolled down when newest message changes
     useEffect(() => {
@@ -204,9 +206,9 @@ export default function ChatScreen({ route }: any) {
                             onPress={sendMessage}
                             disabled={!input.trim()}
                             className={`
-                ml-2 w-11 h-11 items-center justify-center rounded-full
-                ${input.trim() ? "bg-blue-500" : "bg-blue-500/40"}
-              `}
+                                ml-2 w-11 h-11 items-center justify-center rounded-full
+                                ${input.trim() ? "bg-blue-500" : "bg-blue-500/40"}
+                          `}
                         >
                             <Ionicons
                                 name="paper-plane"

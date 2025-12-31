@@ -12,11 +12,12 @@ export type Chat = {
     avatar?: string;
 };
 
-type Props = { item: Chat; lastMessage?: any; unreadCount?: number; }
+type Props = { chat: Chat; lastMessage?: any; unreadCount?: number; }
 
 
-export default function ChatRow({item}: Props) {
+export default function ChatRow(item: Props) {
     const navigation = useNavigation();
+    const chat = item.chat;
 
     let lastMessageText = <Text/>;
     if (item.lastMessage) {
@@ -37,13 +38,13 @@ export default function ChatRow({item}: Props) {
     }
 
     let avatarImage = <ProfilePicDefault/>
-    if (item.avatar) {
-        avatarImage = <Image source={{uri: item.avatar}} className="h-full w-full"/>
+    if (chat.avatar) {
+        avatarImage = <Image source={{uri: chat.avatar}} className="h-full w-full"/>
     }
 
     async function onChatRowPressed() {
         // @ts-ignore
-        navigation.navigate('Chat', {id: item.id});
+        navigation.navigate('Chat', {id: chat.id});
     }
 
     return <>
@@ -56,7 +57,7 @@ export default function ChatRow({item}: Props) {
             </View>
 
             <View className="flex-1 ml-4">
-                <Text className="text-white text-[18px] font-semibold">{item.name}</Text>
+                <Text className="text-white text-[18px] font-semibold">{chat.name}</Text>
                 <View className="flex-row items-center mt-1">
                     {lastMessageText}
                 </View>

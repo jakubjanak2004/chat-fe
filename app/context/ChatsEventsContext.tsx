@@ -74,7 +74,11 @@ export function ChatEventsProvider({ children, getToken }: { children: React.Rea
                 const chatId = message.chatId;
 
                 pushMessage(chatId, message);
-                setLastMessageByChatId(prev => ({ ...prev, [chatId]: message }));
+                setLastMessageByChatId(prev => {
+                    const next = { ...prev, [chatId]: message };
+                    console.log("lastMessageByChatId next =", next);
+                    return next;
+                });
 
                 if (activeChatIdRef.current !== chatId) {
                     setUnreadByChatId(prev => ({ ...prev, [chatId]: (prev[chatId] ?? 0) + 1 }));

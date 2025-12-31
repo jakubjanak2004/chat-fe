@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDebounce } from "use-debounce";
@@ -35,13 +35,16 @@ export default function ChatsScreen() {
         onLayout,
         onContentSizeChange,
         loadAndReplacePage,
-    } = usePagedList<Chat>(fetchChatsPage, [normalizedQuery]);
+    } = usePagedList<Chat>(fetchChatsPage, [normalizedQuery], {
+        autoFillIfNotScrollable: false,
+    });
 
-    useFocusEffect(
-        useCallback(() => {
-            loadAndReplacePage(0);
-        }, [])
-    );
+    // todo sometimes chats are not loaded on the first open
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         loadAndReplacePage(0);
+    //     }, [])
+    // );
 
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>
@@ -49,11 +52,11 @@ export default function ChatsScreen() {
 
             <FlatList
                 data={chats}
+                extraData={{ lastMessageByChatId, unreadByChatId }}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <ChatRow
-                        item={item}
-                        // add these props to ChatRow (recommended)
+                        chat={item}
                         lastMessage={lastMessageByChatId[item.id] ?? item.lastMessage}
                         unreadCount={unreadByChatId[item.id] ?? 0}
                     />

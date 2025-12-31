@@ -1,14 +1,14 @@
 import React from "react";
 import {View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import BlueButton from "../components/button/BlueButton";
-import {GreenButton} from "../components/button/GreenButton";
-import GrayTextInput from "../components/textInput/GrayTextInput";
-import Divider from "../components/divider/Divider";
+import BlueButton from "../../components/button/BlueButton";
+import {GreenButton} from "../../components/button/GreenButton";
+import GrayTextInput from "../../components/textInput/GrayTextInput";
+import Divider from "../../components/divider/Divider";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
-import {http} from "../hooks/http";
-import {useAuth} from "../context/AuthContext";
+import {http} from "../../hooks/http";
+import {useAuth} from "../../context/AuthContext";
 
 type SignUpScreenProps = {
     navigation: NativeStackNavigationProp<any>;
