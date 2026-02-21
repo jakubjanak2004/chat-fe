@@ -1,15 +1,15 @@
-import React, { useLayoutEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useDebounce } from "use-debounce";
-import { CONFIG } from "../../config/env";
+import React, {useLayoutEffect, useMemo, useState} from "react";
+import {ActivityIndicator, FlatList, Pressable, Text, View} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
+import {useDebounce} from "use-debounce";
+import {CONFIG} from "../../config/env";
 
 import BottomTabBar from "../../components/BottomTabBar";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
-import PersonRow, { Person } from "../../components/people/PersonRow";
+import PersonRow, {Person} from "../../components/people/PersonRow";
 import FlatListDivider from "../../components/divider/FlatListDivider";
-import { http } from "../../hooks/http";
-import { useNavigation } from "@react-navigation/native";
+import {http} from "../../hooks/http";
+import {useNavigation} from "@react-navigation/native";
 import AddGroupIcon from "../../components/icon/AddGroupIcon";
 import {usePagedList} from "../../hooks/usePagedList";
 
@@ -53,23 +53,38 @@ export default function PeopleScreen() {
                     }}
                     onPress={() => navigation.navigate("CreateGroup")}
                 >
-                    <AddGroupIcon />
+                    <AddGroupIcon/>
                 </Pressable>
             ),
         });
     }, [navigation]);
 
+    async function handleOnPress(p: Person) {
+        try {
+            const res = await http.client.get(`/chats/me/person/${p.username}`)
+            const chat = res.data
+            navigation.navigate("Chat", {id: chat.id})
+        } catch(error) {
+            navigation.navigate('Chat', {personUsernameFallback: p.username})
+        }
+    }
+
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>
             {/* Search */}
-            <SearchTextInput value={query} onChangeText={setQuery} />
+            <SearchTextInput value={query} onChangeText={setQuery}/>
 
             {/* List */}
             <FlatList
                 data={people}
                 keyExtractor={(item) => item.username}
-                renderItem={({ item }) => <PersonRow item={item} />}
-                ItemSeparatorComponent={() => <FlatListDivider />}
+                renderItem={({item}) =>
+                    <PersonRow
+                        item={item}
+                        onPress={handleOnPress}
+                    />
+                }
+                ItemSeparatorComponent={() => <FlatListDivider/>}
                 className="flex-1"
                 onEndReached={onEndReached}
                 onEndReachedThreshold={0.6}
@@ -78,7 +93,7 @@ export default function PeopleScreen() {
                 ListEmptyComponent={
                     loading ? (
                         <View className="items-center justify-center py-10">
-                            <ActivityIndicator />
+                            <ActivityIndicator/>
                         </View>
                     ) : (
                         <View className="items-center justify-center py-10">
@@ -91,13 +106,13 @@ export default function PeopleScreen() {
                 ListFooterComponent={
                     loadingMore ? (
                         <View className="py-4">
-                            <ActivityIndicator />
+                            <ActivityIndicator/>
                         </View>
                     ) : null
                 }
             />
 
-            <BottomTabBar />
+            <BottomTabBar/>
         </SafeAreaView>
     );
 }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
     View,
     FlatList,
@@ -7,16 +7,17 @@ import {
     Pressable,
     ActivityIndicator,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/core";
+import {useFocusEffect} from "@react-navigation/core";
 // @ts-ignore
-import { Ionicons } from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
 
-import MessageRow, { Message, RenderMessage } from "../../components/message/MessageRow";
-import { useAuth } from "../../context/AuthContext";
-import { http } from "../../hooks/http";
-import { CONFIG } from "../../config/env";
-import { useChatEvents } from "../../context/ChatsEventsContext";
-import { usePagedList } from "../../hooks/usePagedList"; // <- adjust import path
+import MessageRow, {Message, RenderMessage} from "../../components/message/MessageRow";
+import {useAuth} from "../../context/AuthContext";
+import {http} from "../../hooks/http";
+import {CONFIG} from "../../config/env";
+import {useChatEvents} from "../../context/ChatsEventsContext";
+import {usePagedList} from "../../hooks/usePagedList";
+import {Chat} from "../../components/chat/ChatRow"; // <- adjust import path
 
 function isDifferentDay(aMillis: number, bMillis: number) {
     const a = new Date(aMillis);
@@ -40,9 +41,9 @@ function shouldShowTimeSeparator(messages: Message[], index: number) {
     return (currMs - nextMs) / (1000 * 60) >= CONFIG.SEPARATOR_GAP_MIN;
 }
 
-export default function ChatScreen({ route }: any) {
-    const { user } = useAuth();
-    const { id } = route.params as { id: string };
+export default function ChatScreen({route}: any) {
+    const {user} = useAuth();
+    const {id, personUsernameFallback} = route.params as { id?: string, personUsernameFallback?: string };
     const {
         setActiveChatId,
         markChatRead,
@@ -50,23 +51,28 @@ export default function ChatScreen({ route }: any) {
         upsertMessages
     } = useChatEvents();
 
+
+    const [chatId, setChatId] = useState<string | null>(id ?? null);
     const [input, setInput] = useState("");
     const listRef = useRef<FlatList<RenderMessage>>(null);
     const lastLatestIdRef = useRef<string | null>(null);
 
     // Messages live in global context (WS updates go there)
-    const messages: Message[] = useMemo(
-        () => (messagesByChatId[id] ?? []) as Message[],
-        [messagesByChatId, id]
+    const messages: Message[] = useMemo(() => {
+            if (!chatId) return []
+            return (messagesByChatId[chatId] ?? [])
+        },
+        [messagesByChatId, chatId]
     );
 
     // focus: active chat + clear unread
     useFocusEffect(
         useCallback(() => {
-            setActiveChatId(id);
-            markChatRead(id);
+            if (!chatId) return;
+            setActiveChatId(chatId);
+            markChatRead(chatId);
             return () => setActiveChatId(null);
-        }, [id])
+        }, [chatId])
     );
 
     /**
@@ -76,15 +82,16 @@ export default function ChatScreen({ route }: any) {
      * IMPORTANT: fetchPage MUST return Spring {content, number, last}
      */
     const fetchPage = useCallback(async (page: number) => {
-        const res = await http.client.get(`/chats/${id}/messages`, {
-            params: { page, size: CONFIG.PAGE_SIZE, sort: "created,desc" },
+        if (!chatId) return
+        const res = await http.client.get(`/chats/${chatId}/messages`, {
+            params: {page, size: CONFIG.PAGE_SIZE, sort: "created,desc"},
         });
         return {
             content: res.data?.content ?? [],
             number: res.data?.number ?? page,
             last: res.data?.last ?? true,
         };
-    }, [id]);
+    }, [chatId]);
 
     const {
         items: pagedItems,
@@ -95,7 +102,7 @@ export default function ChatScreen({ route }: any) {
         onContentSizeChange,
     } = usePagedList<Message>(
         fetchPage,
-        [id],
+        [chatId],
         {
             mergeReplace: (incoming) => incoming,
             mergeAppend: (prev, incoming) => [...prev, ...incoming],
@@ -109,8 +116,9 @@ export default function ChatScreen({ route }: any) {
         //     console.log(item);
         //     console.log()
         // }
-        upsertMessages(id, pagedItems, "replace");
-    }, [id, pagedItems]);
+        if (!chatId) return;
+        upsertMessages(chatId, pagedItems, "replace");
+    }, [chatId, pagedItems]);
 
 
     // stay scrolled down when newest message changes
@@ -120,7 +128,7 @@ export default function ChatScreen({ route }: any) {
 
         const latestId = messages[0].id;
         if (lastLatestIdRef.current && lastLatestIdRef.current !== latestId) {
-            listRef.current.scrollToOffset({ offset: 0, animated: true });
+            listRef.current.scrollToOffset({offset: 0, animated: true});
         }
         lastLatestIdRef.current = latestId;
     }, [messages]);
@@ -130,10 +138,26 @@ export default function ChatScreen({ route }: any) {
         if (!text) return;
         setInput("");
 
+        if (!chatId && !personUsernameFallback) return;
+
+        let targetChatId = chatId;
+
+        if (!targetChatId) {
+            const res = await http.client.post("/chats/me", {
+                name: personUsernameFallback,
+                membersList: [personUsernameFallback],
+            });
+
+            const chat: Chat = res.data;
+            targetChatId = chat.id;
+
+            setChatId(targetChatId);
+        }
+
         try {
-            await http.client.post(`/chats/${id}/messages`, { content: text });
+            await http.client.post(`/chats/${targetChatId}/messages`, { content: text });
         } catch (error) {
-            console.error(error);
+            console.error("message posting failed", error);
         }
     }
 
@@ -149,7 +173,7 @@ export default function ChatScreen({ route }: any) {
     }, [messages, user.username]);
 
     const renderItem = useCallback(
-        ({ item }: { item: RenderMessage }) => <MessageRow row={item} />,
+        ({item}: { item: RenderMessage }) => <MessageRow row={item}/>,
         []
     );
 
@@ -161,12 +185,12 @@ export default function ChatScreen({ route }: any) {
                     inverted
                     data={rows}
                     keyExtractor={(row) => row.msg.id}
-                    contentContainerStyle={{ paddingTop: 8, paddingBottom: 12 }}
+                    contentContainerStyle={{paddingTop: 8, paddingBottom: 12}}
                     onEndReached={onEndReached}
                     onEndReachedThreshold={0.2}
                     onLayout={onLayout}
                     onContentSizeChange={onContentSizeChange}
-                    maintainVisibleContentPosition={{ minIndexForVisible: 1, autoscrollToTopThreshold: 50 }}
+                    maintainVisibleContentPosition={{minIndexForVisible: 1, autoscrollToTopThreshold: 50}}
                     renderItem={renderItem}
                     removeClippedSubviews
                     windowSize={10}
@@ -176,14 +200,14 @@ export default function ChatScreen({ route }: any) {
                     ListFooterComponent={
                         loadingMore ? (
                             <View className="py-3">
-                                <ActivityIndicator />
+                                <ActivityIndicator/>
                             </View>
                         ) : null
                     }
                     ListEmptyComponent={
                         loading ? (
                             <View className="py-6">
-                                <ActivityIndicator />
+                                <ActivityIndicator/>
                             </View>
                         ) : null
                     }
@@ -214,7 +238,7 @@ export default function ChatScreen({ route }: any) {
                                 name="paper-plane"
                                 size={18}
                                 color={input.trim() ? "white" : "rgba(255,255,255,0.6)"}
-                                style={{ transform: [{ rotate: "-20deg" }] }}
+                                style={{transform: [{rotate: "-20deg"}]}}
                             />
                         </Pressable>
                     </View>
