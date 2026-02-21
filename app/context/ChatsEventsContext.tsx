@@ -20,51 +20,62 @@ type ChatEventsCtx = {
 
 const Ctx = createContext<ChatEventsCtx | null>(null);
 
-function dedupeNewestFirst(arr: any[]) {
-    const seen = new Set<string>();
-    const out: any[] = [];
+function dedupeNewestFirst(arr: Message[]): Message[] {
+    // last write wins for same id
+    const map = new Map<string, Message>();
     for (const m of arr) {
         if (!m?.id) continue;
-        if (seen.has(m.id)) continue;
-        seen.add(m.id);
-        out.push(m);
+        map.set(m.id, m);
     }
+
+    const out = Array.from(map.values());
+
+    out.sort((a, b) => {
+        const dt = Date.parse(b.created) - Date.parse(a.created);
+        if (dt !== 0) return dt;
+        // deterministic tie-break if timestamps equal
+        return b.id.localeCompare(a.id);
+    });
+
     return out;
 }
 
-export function ChatEventsProvider({ children, getToken }: { children: React.ReactNode; getToken: () => string | null }) {
+export function ChatEventsProvider({children, getToken}: { children: React.ReactNode; getToken: () => string | null }) {
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
     const [lastMessageByChatId, setLastMessageByChatId] = useState<Record<string, any>>({});
     const [unreadByChatId, setUnreadByChatId] = useState<Record<string, number>>({});
-    const [messagesByChatId, setMessagesByChatId] = useState<Record<string, any[]>>({});
+    const [messagesByChatId, setMessagesByChatId] = useState<Record<string, Message[]>>({});
 
     const activeChatIdRef = useRef<string | null>(null);
-    useEffect(() => { activeChatIdRef.current = activeChatId; }, [activeChatId]);
+    useEffect(() => {
+        activeChatIdRef.current = activeChatId;
+    }, [activeChatId]);
 
     const upsertMessages = useCallback((chatId: string, msgs: any[], mode: "replace" | "prepend" | "append") => {
         setMessagesByChatId(prev => {
             const existing = prev[chatId] ?? [];
 
-            if (mode === "replace") return { ...prev, [chatId]: dedupeNewestFirst(msgs) };
-            if (mode === "prepend") return { ...prev, [chatId]: dedupeNewestFirst([...msgs, ...existing]) };
+            if (mode === "replace") return {...prev, [chatId]: dedupeNewestFirst(msgs)};
+            if (mode === "prepend") return {...prev, [chatId]: dedupeNewestFirst([...msgs, ...existing])};
 
             // append older
-            return { ...prev, [chatId]: dedupeNewestFirst([...existing, ...msgs]) };
+            return {...prev, [chatId]: dedupeNewestFirst([...existing, ...msgs])};
         });
     }, []);
 
+    // todo respect the time ordering in push message
     const pushMessage = useCallback((chatId: string, msg: Message) => {
+        console.log('message:', msg);
         setMessagesByChatId(prev => {
-            console.log('message:', msg);
             const chatId = msg.chatId;
             const existing = prev[chatId] ?? [];
             if (existing[0]?.id === msg.id) return prev;
-            return { ...prev, [chatId]: dedupeNewestFirst([msg, ...existing]) };
+            return {...prev, [chatId]: dedupeNewestFirst([msg, ...existing])};
         });
     }, []);
 
     const markChatRead = useCallback((chatId: string) => {
-        setUnreadByChatId(prev => ({ ...prev, [chatId]: 0 }));
+        setUnreadByChatId(prev => ({...prev, [chatId]: 0}));
     }, []);
 
     useEffect(() => {
@@ -75,13 +86,13 @@ export function ChatEventsProvider({ children, getToken }: { children: React.Rea
 
                 pushMessage(chatId, message);
                 setLastMessageByChatId(prev => {
-                    const next = { ...prev, [chatId]: message };
+                    const next = {...prev, [chatId]: message};
                     console.log("lastMessageByChatId next =", next);
                     return next;
                 });
 
                 if (activeChatIdRef.current !== chatId) {
-                    setUnreadByChatId(prev => ({ ...prev, [chatId]: (prev[chatId] ?? 0) + 1 }));
+                    setUnreadByChatId(prev => ({...prev, [chatId]: (prev[chatId] ?? 0) + 1}));
                     notifyMessage(message, chatId);
                 }
             });
