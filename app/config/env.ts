@@ -3,7 +3,7 @@ export const CONFIG = {
     PAGE_SIZE: 20,
     // rest
     API_URL: "http://127.0.0.1:8090",
-    TIMEOUT_MS: 1000,
+    TIMEOUT_MS: 5000,
     SEPARATOR_GAP_MIN: 15,
     // ws
     WS_URL: "http://127.0.0.1:8090/ws",
