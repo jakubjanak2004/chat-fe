@@ -1,13 +1,16 @@
 import {Person} from '../people/PersonRow';
 import {View} from "react-native";
 import TimeSeparator from "./TimeSeparator";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import RightBubble from "./RightBubble";
 import LeftBubble from "./LeftBubble";
+import {useChatEvents} from "../../context/ChatsEventsContext";
 
 export type Message = {
     id: string,
     responseToId: string | null,
+    responseToSender: Person | null,
+    responseToContent: string | null,
     chatId: string,
     sender: Person,
     created: string,
@@ -32,9 +35,9 @@ function MessageRow({row}: { row: RenderMessage }) {
     const createdDate = formatTimeLabel(new Date(row.created).getTime())
     let bubble;
     if (row.isMine) {
-        bubble = <RightBubble item={row.msg}/>;
+        bubble = <RightBubble item={row.msg} />;
     } else {
-        bubble = <LeftBubble item={row.msg}/>;
+        bubble = <LeftBubble item={row.msg} />;
     }
     return <>
         <View>
