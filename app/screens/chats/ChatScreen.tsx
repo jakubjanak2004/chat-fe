@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
     View,
     FlatList,
+    Text,
     TextInput,
     KeyboardAvoidingView,
     Pressable,
@@ -54,6 +55,7 @@ export default function ChatScreen({route}: any) {
 
     const [chatId, setChatId] = useState<string | null>(id ?? null);
     const [input, setInput] = useState("");
+    const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const listRef = useRef<FlatList<RenderMessage>>(null);
     const lastLatestIdRef = useRef<string | null>(null);
 
@@ -155,7 +157,11 @@ export default function ChatScreen({route}: any) {
         }
 
         try {
-            await http.client.post(`/chats/${targetChatId}/messages`, { content: text });
+            await http.client.post(`/chats/${targetChatId}/messages`, {
+                content: text,
+                replyToId: replyingTo?.id,
+            });
+            setReplyingTo(null);
         } catch (error) {
             console.error("message posting failed", error);
         }
@@ -173,7 +179,8 @@ export default function ChatScreen({route}: any) {
     }, [messages, user.username]);
 
     const renderItem = useCallback(
-        ({item}: { item: RenderMessage }) => <MessageRow row={item}/>,
+        ({item}: { item: RenderMessage }) =>
+            <MessageRow row={item} onPress={(message) => setReplyingTo(message)}/>,
         []
     );
 
@@ -215,8 +222,39 @@ export default function ChatScreen({route}: any) {
 
                 {/* Input bar */}
                 <View className="px-4 pb-6 pt-2 border-t border-white/10 bg-black">
-                    <View className="flex-row items-center">
+                    <View className="flex-row items-end">
                         <View className="flex-1 mx-2 bg-white/10 rounded-2xl px-4 py-3">
+                            {!!replyingTo && (
+                                <View className="mb-2">
+                                    <View className="flex-row items-start">
+                                        {/* Reply preview */}
+                                        <View
+                                            className="flex-1 px-3 py-2 rounded-xl bg-white/10 border-l-4 border-blue-400">
+                                            <Text className="text-white/90 text-[12px] font-semibold mb-0.5">
+                                                Replying to {replyingTo.sender.username}
+                                            </Text>
+
+                                            <Text
+                                                className="text-white/75 text-[13px] leading-4"
+                                                numberOfLines={1}
+                                                ellipsizeMode="tail"
+                                            >
+                                                {replyingTo.content}
+                                            </Text>
+                                        </View>
+
+                                        {/* Cancel button */}
+                                        <Pressable
+                                            onPress={() => setReplyingTo(null)}
+                                            hitSlop={10}
+                                            className="ml-2 w-8 h-8 items-center justify-center rounded-full bg-white/10"
+                                        >
+                                            <Text className="text-white/70 text-[14px]">✕</Text>
+                                        </Pressable>
+                                    </View>
+                                </View>
+                            )}
+
                             <TextInput
                                 value={input}
                                 multiline
@@ -226,13 +264,14 @@ export default function ChatScreen({route}: any) {
                                 className="text-white text-[16px]"
                             />
                         </View>
+
                         <Pressable
                             onPress={sendMessage}
                             disabled={!input.trim()}
                             className={`
                                 ml-2 w-11 h-11 items-center justify-center rounded-full
                                 ${input.trim() ? "bg-blue-500" : "bg-blue-500/40"}
-                          `}
+                              `}
                         >
                             <Ionicons
                                 name="paper-plane"

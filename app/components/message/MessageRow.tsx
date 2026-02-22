@@ -1,5 +1,5 @@
 import {Person} from '../people/PersonRow';
-import {View} from "react-native";
+import {Pressable, View} from "react-native";
 import TimeSeparator from "./TimeSeparator";
 import React, {useEffect, useState} from "react";
 import RightBubble from "./RightBubble";
@@ -31,18 +31,25 @@ function formatTimeLabel(ms: number) {
     return `${hh}:${mm}`;
 }
 
-function MessageRow({row}: { row: RenderMessage }) {
+type Props = {
+    row: RenderMessage,
+    onPress: (message: Message) => void,
+}
+
+function MessageRow({row, onPress}: Props) {
     const createdDate = formatTimeLabel(new Date(row.created).getTime())
     let bubble;
     if (row.isMine) {
-        bubble = <RightBubble item={row.msg} />;
+        bubble = <RightBubble item={row.msg}/>;
     } else {
-        bubble = <LeftBubble item={row.msg} />;
+        bubble = <LeftBubble item={row.msg}/>;
     }
     return <>
         <View>
             {row.showSep && <TimeSeparator label={createdDate}/>}
-            {bubble}
+            <Pressable onPress={() => onPress(row.msg)}>
+                {bubble}
+            </Pressable>
         </View>
     </>;
 }
