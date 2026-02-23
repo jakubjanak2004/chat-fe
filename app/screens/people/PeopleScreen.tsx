@@ -6,12 +6,18 @@ import {CONFIG} from "../../config/env";
 
 import BottomTabBar from "../../components/BottomTabBar";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
-import PersonRow, {Person} from "../../components/people/PersonRow";
+import PersonRow from "../../components/people/PersonRow";
 import FlatListDivider from "../../components/divider/FlatListDivider";
 import {http} from "../../hooks/http";
 import {useNavigation} from "@react-navigation/native";
 import AddGroupIcon from "../../components/icon/AddGroupIcon";
 import {usePagedList} from "../../hooks/usePagedList";
+import {paths} from "../../../api/schema";
+
+type UsersQuery = NonNullable<paths["/users"]["get"]["parameters"]["query"]>;
+type PageChatUserDTO = paths["/users"]["get"]["responses"]["200"]["content"]["application/json"];
+type ChatUserDTO = NonNullable<PageChatUserDTO["content"]>[number];
+type ChatDTO = paths["/chats/me/person/{username}"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export default function PeopleScreen() {
     const [query, setQuery] = useState("");
@@ -21,14 +27,23 @@ export default function PeopleScreen() {
     const navigation = useNavigation<any>();
 
     const fetchPeoplePage = async (page: number) => {
-        const res = await http.client.get("/users", {
-            params: {
-                query: normalizedQuery,
-                page,
-                size: CONFIG.PAGE_SIZE,
-            },
+        const params: UsersQuery = {
+            query: normalizedQuery,
+            page,
+            size: CONFIG.PAGE_SIZE,
+            sort: ["username,asc"]
+        };
+        const res = await http.client.get<PageChatUserDTO>("/users", {
+            params,
+            paramsSerializer: { indexes: null },
         });
-        return res.data;
+        const data = res.data;
+        console.log('users fetched', data.content?.map(user => user.username));
+        return {
+            content: (data.content ?? []) as ChatUserDTO[],
+            number: data.number ?? page,
+            last: data.last ?? false,
+        }
     };
 
     const {
@@ -38,7 +53,7 @@ export default function PeopleScreen() {
         onEndReached,
         onLayout,
         onContentSizeChange,
-    } = usePagedList<Person>(fetchPeoplePage, [normalizedQuery]);
+    } = usePagedList<ChatUserDTO>(fetchPeoplePage, [normalizedQuery]);
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -59,12 +74,12 @@ export default function PeopleScreen() {
         });
     }, [navigation]);
 
-    async function handleOnPress(p: Person) {
+    async function handleOnPress(p: ChatUserDTO) {
         try {
-            const res = await http.client.get(`/chats/me/person/${p.username}`)
+            const res = await http.client.get<ChatDTO>(`/chats/me/person/${p.username}`)
             const chat = res.data
             navigation.navigate("Chat", {id: chat.id})
-        } catch(error) {
+        } catch (error) {
             navigation.navigate('Chat', {personUsernameFallback: p.username})
         }
     }
@@ -77,7 +92,10 @@ export default function PeopleScreen() {
             {/* List */}
             <FlatList
                 data={people}
-                keyExtractor={(item) => item.username}
+                keyExtractor={(item) => {
+                    // console.log(item.username);
+                    return item.username
+                }}
                 renderItem={({item}) =>
                     <PersonRow
                         item={item}

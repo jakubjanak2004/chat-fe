@@ -18,12 +18,14 @@ import {http} from "../../hooks/http";
 import {CONFIG} from "../../config/env";
 import {useChatEvents} from "../../context/ChatsEventsContext";
 import {usePagedList} from "../../hooks/usePagedList";
-import {Chat} from "../../components/chat/ChatRow";
 import {components, paths} from "../../../api/schema";
 
 type PageMessageDTO = paths["/chats/{chatId}/messages"]["get"]["responses"]["200"]["content"]["application/json"];
 type GetMessagesQuery = NonNullable<paths["/chats/{chatId}/messages"]["get"]["parameters"]["query"]>;
 type MessageDTO = components["schemas"]["MessageDTO"];
+type CreateChatDTO = paths["/chats/me"]["post"]["requestBody"]["content"]["application/json"];
+type ChatDTO = paths["/chats/me"]["post"]["responses"]["200"]["content"]["application/json"];
+type CreateMessageDTO = paths["/chats/{chatId}/messages"]["post"]["requestBody"]["content"]["application/json"];
 
 function isDifferentDay(aMillis: number, bMillis: number) {
     const a = new Date(aMillis);
@@ -146,27 +148,27 @@ export default function ChatScreen({route}: any) {
         if (!text) return;
         setInput("");
 
-        if (!chatId && !personUsernameFallback) return;
-
         let targetChatId = chatId;
 
-        if (!targetChatId) {
-            const res = await http.client.post("/chats/me", {
+        if (!targetChatId && !!personUsernameFallback) {
+            const payload: CreateChatDTO = {
                 name: personUsernameFallback,
                 membersList: [personUsernameFallback],
-            });
+            }
+            const res = await http.client.post<ChatDTO>("/chats/me", payload);
 
-            const chat: Chat = res.data;
+            const chat = res.data;
             targetChatId = chat.id;
 
             setChatId(targetChatId);
         }
 
         try {
-            await http.client.post(`/chats/${targetChatId}/messages`, {
+            const payload: CreateMessageDTO = {
                 content: text,
                 replyToId: replyingTo?.id,
-            });
+            }
+            await http.client.post<MessageDTO>(`/chats/${targetChatId}/messages`, payload);
             setReplyingTo(null);
         } catch (error) {
             console.error("message posting failed", error);

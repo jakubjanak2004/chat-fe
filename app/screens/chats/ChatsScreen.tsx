@@ -12,6 +12,10 @@ import { http } from "../../hooks/http";
 import { CONFIG } from "../../config/env";
 import { usePagedList } from "../../hooks/usePagedList";
 import { useChatEvents } from "../../context/ChatsEventsContext";
+import {paths} from "../../../api/schema";
+
+type ChatQuery = NonNullable<paths["/chats/me"]["get"]["parameters"]["query"]>;
+type PageChatDTO = paths["/chats/me"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export default function ChatsScreen() {
     const [query, setQuery] = useState("");
@@ -21,10 +25,23 @@ export default function ChatsScreen() {
     const { lastMessageByChatId, unreadByChatId } = useChatEvents();
 
     const fetchChatsPage = async (page: number) => {
-        const res = await http.client.get("/chats/me", {
-            params: { query: normalizedQuery, page, size: CONFIG.PAGE_SIZE },
+        const params: ChatQuery = {
+            query: normalizedQuery,
+            page,
+            size: CONFIG.PAGE_SIZE,
+            sort: ["name,asc"]
+        }
+        const res = await http.client.get<PageChatDTO>("/chats/me", {
+            params,
+            paramsSerializer: { indexes: null },
         });
-        return res.data;
+        const data = res.data;
+
+        return {
+            content: (data.content ?? []) as Chat[],
+            number: data.number ?? page,
+            last: data.last ?? false,
+        };
     };
 
     const {
@@ -34,17 +51,9 @@ export default function ChatsScreen() {
         onEndReached,
         onLayout,
         onContentSizeChange,
-        loadAndReplacePage,
     } = usePagedList<Chat>(fetchChatsPage, [normalizedQuery], {
         autoFillIfNotScrollable: false,
     });
-
-    // todo sometimes chats are not loaded on the first open
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         loadAndReplacePage(0);
-    //     }, [])
-    // );
 
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>

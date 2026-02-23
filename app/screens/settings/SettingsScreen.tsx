@@ -11,13 +11,10 @@ import {http} from "../../hooks/http";
 import {CONFIG} from "../../config/env";
 import PersonIcon from "../../components/icon/PersonIcon";
 import ProfilePicDefault from "../../components/people/ProfilePicDefault";
+import {paths} from "../../../api/schema";
 
-type Profile = {
-    firstName: string;
-    lastName: string;
-    email: string;
-    avatarUrl?: string;
-};
+type UpdateMyProfilePictureOp = paths["/users/me/profile-picture"]["put"];
+type ProfilePictureUpdate = NonNullable<UpdateMyProfilePictureOp["requestBody"]>["content"]["multipart/form-data"];
 
 function isValidEmail(v: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
@@ -26,7 +23,7 @@ function isValidEmail(v: string) {
 export default function SettingsScreen() {
     const {user, logout, updateUser, updateProfilePicture} = useAuth();
 
-    const [draft, setDraft] = useState<Profile>(user);
+    const [draft, setDraft] = useState<User>(user);
     const [saving, setSaving] = useState(false);
 
     const fullName = `${draft.firstName} ${draft.lastName}`.trim();
@@ -75,13 +72,13 @@ export default function SettingsScreen() {
         form.append("file", {
             uri,
             // todo I dont like the naming here with the type
-            name: "profile.jpg",              // can be anything
+            name: "profile.jpg", // can be anything
             type: asset.mimeType ?? "image/jpeg",
         } as any);
 
         // 3) send
         try {
-            const res = await http.client.put("/users/me/profile-picture", form, {
+            await http.client.put<ProfilePictureUpdate>("/users/me/profile-picture", form, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },

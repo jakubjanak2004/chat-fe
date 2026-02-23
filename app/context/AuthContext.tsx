@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
 import {http} from "../hooks/http";
 import {stompService} from "../ws/stompService";
+import {paths} from "../../api/schema";
 
 type Token = string | null;
 
@@ -13,12 +14,9 @@ export interface User {
     hasProfilePicture: boolean;
 }
 
-export interface UpdateMeInput {
-    firstName: string;
-    lastName: string;
-    email: string;
-}
+type UpdateChatUserDTO = paths["/users/me"]["put"]["requestBody"]["content"]["application/json"]
 
+// todo import from paths
 export interface ProfilePicUpdate {
     hasProfilePicture: boolean;
 }
@@ -31,7 +29,7 @@ export interface AuthContextValue {
     login: (token: string, user: User) => void;
     logout: () => void;
 
-    updateUser: (input: UpdateMeInput) => Promise<void>;
+    updateUser: (input: UpdateChatUserDTO) => Promise<void>;
     updateProfilePicture: (input: ProfilePicUpdate) => void;
 }
 
@@ -82,12 +80,13 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
             setUser(emptyUser);
         },
 
-        updateUser: async ({firstName, lastName, email}: UpdateMeInput) => {
-            await http.client.put('/users/me', {
+        updateUser: async ({firstName, lastName, email}: UpdateChatUserDTO) => {
+            const payload: UpdateChatUserDTO = {
                 firstName,
                 lastName,
                 email,
-            });
+            }
+            await http.client.put('/users/me', payload);
             // keep local state in sync
             setUser((prev) =>
                 prev
