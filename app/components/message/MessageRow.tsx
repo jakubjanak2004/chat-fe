@@ -5,20 +5,12 @@ import React, {useEffect, useState} from "react";
 import RightBubble from "./RightBubble";
 import LeftBubble from "./LeftBubble";
 import {useChatEvents} from "../../context/ChatsEventsContext";
+import {components} from "../../../api/schema";
 
-export type Message = {
-    id: string,
-    responseToId: string | null,
-    responseToSender: Person | null,
-    responseToContent: string | null,
-    chatId: string,
-    sender: Person,
-    created: string,
-    content: string,
-}
+type MessageDTO = components["schemas"]["MessageDTO"];
 
 export type RenderMessage = {
-    msg: Message;
+    msg: MessageDTO;
     showSep: boolean;
     created: string;
     isMine: boolean;
@@ -33,7 +25,7 @@ function formatTimeLabel(ms: number) {
 
 type Props = {
     row: RenderMessage,
-    onPress: (message: Message) => void,
+    onPress: (message: MessageDTO) => void,
 }
 
 function MessageRow({row, onPress}: Props) {

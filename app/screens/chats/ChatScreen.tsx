@@ -12,13 +12,18 @@ import {useFocusEffect} from "@react-navigation/core";
 // @ts-ignore
 import {Ionicons} from "@expo/vector-icons";
 
-import MessageRow, {Message, RenderMessage} from "../../components/message/MessageRow";
+import MessageRow, {RenderMessage} from "../../components/message/MessageRow";
 import {useAuth} from "../../context/AuthContext";
 import {http} from "../../hooks/http";
 import {CONFIG} from "../../config/env";
 import {useChatEvents} from "../../context/ChatsEventsContext";
 import {usePagedList} from "../../hooks/usePagedList";
-import {Chat} from "../../components/chat/ChatRow"; // <- adjust import path
+import {Chat} from "../../components/chat/ChatRow";
+import {components, paths} from "../../../api/schema";
+
+type PageMessageDTO = paths["/chats/{chatId}/messages"]["get"]["responses"]["200"]["content"]["application/json"];
+type GetMessagesQuery = NonNullable<paths["/chats/{chatId}/messages"]["get"]["parameters"]["query"]>;
+type MessageDTO = components["schemas"]["MessageDTO"];
 
 function isDifferentDay(aMillis: number, bMillis: number) {
     const a = new Date(aMillis);
@@ -30,7 +35,7 @@ function isDifferentDay(aMillis: number, bMillis: number) {
     );
 }
 
-function shouldShowTimeSeparator(messages: Message[], index: number) {
+function shouldShowTimeSeparator(messages: MessageDTO[], index: number) {
     const curr = messages[index];
     const nextOlder = messages[index + 1];
     if (!nextOlder) return true;
@@ -55,12 +60,12 @@ export default function ChatScreen({route}: any) {
 
     const [chatId, setChatId] = useState<string | null>(id ?? null);
     const [input, setInput] = useState("");
-    const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+    const [replyingTo, setReplyingTo] = useState<MessageDTO | null>(null);
     const listRef = useRef<FlatList<RenderMessage>>(null);
     const lastLatestIdRef = useRef<string | null>(null);
 
     // Messages live in global context (WS updates go there)
-    const messages: Message[] = useMemo(() => {
+    const messages: MessageDTO[] = useMemo(() => {
             if (!chatId) return []
             return (messagesByChatId[chatId] ?? [])
         },
@@ -84,14 +89,20 @@ export default function ChatScreen({route}: any) {
      * IMPORTANT: fetchPage MUST return Spring {content, number, last}
      */
     const fetchPage = useCallback(async (page: number) => {
-        if (!chatId) return
-        const res = await http.client.get(`/chats/${chatId}/messages`, {
-            params: {page, size: CONFIG.PAGE_SIZE, sort: "created,desc"},
-        });
+        if (!chatId) {
+            return {content: [], number: page, last: true}
+        }
+        const params: GetMessagesQuery = {
+            page,
+            size: CONFIG.PAGE_SIZE,
+            sort: ["created,desc"],
+        };
+        const res = await http.client.get<PageMessageDTO>(`/chats/${chatId}/messages`, {params});
+        const data = res.data;
         return {
-            content: res.data?.content ?? [],
-            number: res.data?.number ?? page,
-            last: res.data?.last ?? true,
+            content: (data.content ?? []) as MessageDTO[],
+            number: data.number ?? page,
+            last: data.last ?? false,
         };
     }, [chatId]);
 
@@ -102,7 +113,7 @@ export default function ChatScreen({route}: any) {
         onEndReached,
         onLayout,
         onContentSizeChange,
-    } = usePagedList<Message>(
+    } = usePagedList<MessageDTO>(
         fetchPage,
         [chatId],
         {
@@ -113,11 +124,6 @@ export default function ChatScreen({route}: any) {
     );
 
     useEffect(() => {
-        // todo logging the pagedItems messages
-        // for(const item of pagedItems) {
-        //     console.log(item);
-        //     console.log()
-        // }
         if (!chatId) return;
         upsertMessages(chatId, pagedItems, "replace");
     }, [chatId, pagedItems]);

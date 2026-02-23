@@ -1,11 +1,13 @@
 import React, { useMemo } from "react";
 import { View, Text, Image } from "react-native";
-import { Message } from "./MessageRow";
 import { CONFIG } from "../../config/env";
 import ProfilePicDefault from "../people/ProfilePicDefault";
+import {components} from "../../../api/schema";
+
+type MessageDTO = components["schemas"]["MessageDTO"];
 
 type Props = {
-    item: Message;
+    item: MessageDTO;
 };
 
 function LeftBubble({ item }: Props) {

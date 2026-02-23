@@ -1,9 +1,11 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { Message } from "./MessageRow";
+import {components} from "../../../api/schema";
+
+type MessageDTO = components["schemas"]["MessageDTO"];
 
 type Props = {
-    item: Message;
+    item: MessageDTO;
 };
 
 function RightBubble({ item }: Props) {

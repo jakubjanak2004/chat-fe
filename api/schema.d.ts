@@ -239,14 +239,14 @@ export interface components {
             sort?: string[];
         };
         PageChatUserDTO: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
@@ -257,12 +257,12 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
-            unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
+            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
@@ -273,14 +273,14 @@ export interface components {
             empty?: boolean;
         };
         PageMessageDTO: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
@@ -291,14 +291,14 @@ export interface components {
             empty?: boolean;
         };
         PageChatDTO: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
@@ -366,8 +366,13 @@ export interface operations {
     };
     getMessagesForChat: {
         parameters: {
-            query: {
-                pageable: components["schemas"]["Pageable"];
+            query?: {
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
             };
             header?: never;
             path: {
@@ -383,7 +388,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageMessageDTO"];
+                    "application/json": components["schemas"]["PageMessageDTO"];
                 };
             };
         };
@@ -409,7 +414,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MessageDTO"];
+                    "application/json": components["schemas"]["MessageDTO"];
                 };
             };
         };
@@ -432,7 +437,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageChatDTO"];
+                    "application/json": components["schemas"]["PageChatDTO"];
                 };
             };
         };
@@ -456,7 +461,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ChatDTO"];
+                    "application/json": components["schemas"]["ChatDTO"];
                 };
             };
         };
@@ -480,7 +485,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["AuthResponseDTO"];
+                    "application/json": components["schemas"]["AuthResponseDTO"];
                 };
             };
         };
@@ -571,7 +576,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MessageDTO"];
+                    "application/json": components["schemas"]["MessageDTO"];
                 };
             };
         };
@@ -593,7 +598,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ChatDTO"];
+                    "application/json": components["schemas"]["ChatDTO"];
                 };
             };
         };

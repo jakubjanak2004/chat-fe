@@ -12,7 +12,7 @@ import {useAuth} from "../../context/AuthContext";
 import {paths} from "../../../api/schema";
 
 type SignUpDTO = paths["/auth/signup"]["post"]["requestBody"]["content"]["application/json"];
-type AuthResponseDTO = paths["/auth/login"]["post"]["responses"]["200"]["content"]["application/json"];
+type AuthResponseDTO = paths["/auth/signup"]["post"]["responses"]["200"]["content"]["application/json"];
 
 
 type SignUpScreenProps = {
