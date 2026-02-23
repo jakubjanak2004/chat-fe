@@ -180,32 +180,32 @@ export interface components {
             replyToId?: string;
         };
         ChatUserDTO: {
-            username?: string;
-            firstName?: string;
-            lastName?: string;
-            hasProfilePicture?: boolean;
+            username: string;
+            firstName: string;
+            lastName: string;
+            hasProfilePicture: boolean;
         };
         MessageDTO: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
             responseToId?: string;
             responseToSender?: components["schemas"]["ChatUserDTO"];
             responseToContent?: string;
             /** Format: uuid */
-            chatId?: string;
-            sender?: components["schemas"]["ChatUserDTO"];
+            chatId: string;
+            sender: components["schemas"]["ChatUserDTO"];
             /** Format: date-time */
-            created?: string;
-            content?: string;
+            created: string;
+            content: string;
         };
         CreateChatDTO: {
             name: string;
             membersList: string[];
         };
         ChatDTO: {
-            id?: string;
-            name?: string;
+            id: string;
+            name: string;
             chatUsers?: components["schemas"]["ChatUserDTO"][];
             lastMessage?: components["schemas"]["MessageDTO"];
         };
@@ -219,13 +219,13 @@ export interface components {
         };
         AuthResponseDTO: {
             /** Format: uuid */
-            userId?: string;
-            token?: string;
-            username?: string;
-            email?: string;
-            firstName?: string;
-            lastName?: string;
-            hasProfilePicture?: boolean;
+            userId: string;
+            token: string;
+            username: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            hasProfilePicture: boolean;
         };
         LoginDTO: {
             username: string;
@@ -243,11 +243,11 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements?: number;
             first?: boolean;
             last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ChatUserDTO"][];
@@ -257,19 +257,19 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
+            unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
         };
         SortObject: {
-            sorted?: boolean;
             unsorted?: boolean;
+            sorted?: boolean;
             empty?: boolean;
         };
         PageMessageDTO: {
@@ -277,11 +277,11 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements?: number;
             first?: boolean;
             last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["MessageDTO"][];
@@ -295,11 +295,11 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements?: number;
             first?: boolean;
             last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ChatDTO"][];
@@ -504,7 +504,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["AuthResponseDTO"];
+                    "application/json": components["schemas"]["AuthResponseDTO"];
                 };
             };
         };
