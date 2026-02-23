@@ -1,17 +1,17 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useDebounce } from "use-debounce";
-import { useFocusEffect } from "@react-navigation/core";
+import {ActivityIndicator, FlatList, Text, View} from "react-native";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import {useDebounce} from "use-debounce";
+import {useFocusEffect} from "@react-navigation/core";
 
 import BottomTabBar from "../../components/BottomTabBar";
-import ChatRow, { Chat } from "../../components/chat/ChatRow";
+import ChatRow, {Chat} from "../../components/chat/ChatRow";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
 import FlatListDivider from "../../components/divider/FlatListDivider";
-import { http } from "../../hooks/http";
-import { CONFIG } from "../../config/env";
-import { usePagedList } from "../../hooks/usePagedList";
-import { useChatEvents } from "../../context/ChatsEventsContext";
+import {http} from "../../hooks/http";
+import {CONFIG} from "../../config/env";
+import {usePagedList} from "../../hooks/usePagedList";
+import {useChatEvents} from "../../context/ChatsEventsContext";
 import {paths} from "../../../api/schema";
 
 type ChatQuery = NonNullable<paths["/chats/me"]["get"]["parameters"]["query"]>;
@@ -22,7 +22,7 @@ export default function ChatsScreen() {
     const [debouncedQuery] = useDebounce(query, 350);
     const normalizedQuery = useMemo(() => debouncedQuery.trim(), [debouncedQuery]);
 
-    const { lastMessageByChatId, unreadByChatId } = useChatEvents();
+    const {lastMessageByChatId, unreadByChatId} = useChatEvents();
 
     const fetchChatsPage = async (page: number) => {
         const params: ChatQuery = {
@@ -33,7 +33,7 @@ export default function ChatsScreen() {
         }
         const res = await http.client.get<PageChatDTO>("/chats/me", {
             params,
-            paramsSerializer: { indexes: null },
+            paramsSerializer: {indexes: null},
         });
         const data = res.data;
 
@@ -57,20 +57,20 @@ export default function ChatsScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>
-            <SearchTextInput value={query} onChangeText={setQuery} />
+            <SearchTextInput value={query} onChangeText={setQuery}/>
 
             <FlatList
                 data={chats}
-                extraData={{ lastMessageByChatId, unreadByChatId }}
+                extraData={{lastMessageByChatId, unreadByChatId}}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
+                renderItem={({item}) => (
                     <ChatRow
                         chat={item}
                         lastMessage={lastMessageByChatId[item.id] ?? item.lastMessage}
                         unreadCount={unreadByChatId[item.id] ?? 0}
                     />
                 )}
-                ItemSeparatorComponent={() => <FlatListDivider />}
+                ItemSeparatorComponent={() => <FlatListDivider/>}
                 className="flex-1"
                 onEndReached={onEndReached}
                 onEndReachedThreshold={0.6}
@@ -79,7 +79,7 @@ export default function ChatsScreen() {
                 ListEmptyComponent={
                     loading ? (
                         <View className="items-center justify-center py-10">
-                            <ActivityIndicator />
+                            <ActivityIndicator/>
                         </View>
                     ) : (
                         <View className="items-center justify-center py-10">
@@ -90,15 +90,21 @@ export default function ChatsScreen() {
                     )
                 }
                 ListFooterComponent={
-                    loadingMore ? (
-                        <View className="py-4">
-                            <ActivityIndicator />
-                        </View>
-                    ) : null
+                    <>
+                        {loadingMore ? (
+                            <View className="py-4">
+                                <ActivityIndicator/>
+                            </View>
+                        ) : null}
+
+                        {/* spacer so last item can scroll under BottomTabBar */}
+                        <View style={{height: CONFIG.TAB_BAR_HEIGHT}}/>
+                    </>
                 }
             />
 
-            <BottomTabBar />
+            <BottomTabBar/>
         </SafeAreaView>
-    );
+    )
+        ;
 }

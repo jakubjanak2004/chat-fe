@@ -35,7 +35,7 @@ export default function PeopleScreen() {
         };
         const res = await http.client.get<PageChatUserDTO>("/users", {
             params,
-            paramsSerializer: { indexes: null },
+            paramsSerializer: {indexes: null},
         });
         const data = res.data;
         console.log('users fetched', data.content?.map(user => user.username));
@@ -122,11 +122,16 @@ export default function PeopleScreen() {
                     )
                 }
                 ListFooterComponent={
-                    loadingMore ? (
-                        <View className="py-4">
-                            <ActivityIndicator/>
-                        </View>
-                    ) : null
+                    <>
+                        {loadingMore ? (
+                            <View className="py-4">
+                                <ActivityIndicator/>
+                            </View>
+                        ) : null}
+
+                        {/* spacer so last item can scroll under the bottom bar */}
+                        <View style={{height: CONFIG.TAB_BAR_HEIGHT}}/>
+                    </>
                 }
             />
 

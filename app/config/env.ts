@@ -10,4 +10,7 @@ export const CONFIG = {
     WS_RECONNECT_DELAY:  5000,
     WS_HEARTBEAT_INCOMING: 10000,
     WS_HEARTBEAT_OUTGOING: 10000,
+
+    // bottom bar height
+    TAB_BAR_HEIGHT: 112,
 };
