@@ -9,13 +9,18 @@ import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
 import {http} from "../../hooks/http";
 import {useAuth} from "../../context/AuthContext";
+import {paths} from "../../../api/schema";
+
+type SignUpDTO = paths["/auth/signup"]["post"]["requestBody"]["content"]["application/json"];
+type AuthResponseDTO = paths["/auth/login"]["post"]["responses"]["200"]["content"]["application/json"];
+
 
 type SignUpScreenProps = {
     navigation: NativeStackNavigationProp<any>;
     route: RouteProp<any>;
 }
 
-const SignUpScreen = ({navigation, route}: SignUpScreenProps) => {
+const SignUpScreen = ({navigation}: SignUpScreenProps) => {
     const {login} = useAuth();
     const [username, setUsername] = React.useState<string>("");
     const [firstName, setFistName] = React.useState<string>("");
@@ -25,13 +30,14 @@ const SignUpScreen = ({navigation, route}: SignUpScreenProps) => {
 
     async function onSignUp() {
         try {
-            const res = await http.client.post('/auth/signup', {
+            const payload: SignUpDTO = {
                 username,
                 firstName,
                 lastName,
                 email,
                 password,
-            });
+            }
+            const res = await http.client.post<AuthResponseDTO>('/auth/signup', payload);
             const data = res.data;
             login(data.token, data);
         } catch (error) {

@@ -14,6 +14,10 @@ import {RouteProp} from "@react-navigation/native";
 import {http} from "../../hooks/http";
 import {useAuth} from "../../context/AuthContext";
 import axios from "axios";
+import {paths} from "../../../api/schema";
+
+type LoginDTO = paths["/auth/login"]["post"]["requestBody"]["content"]["application/json"];
+type AuthResponseDTO = paths["/auth/login"]["post"]["responses"]["200"]["content"]["application/json"];
 
 type LoginScreenProps = {
     navigation: NativeStackNavigationProp<any>;
@@ -27,9 +31,8 @@ const LoginScreen = ({navigation, route}: LoginScreenProps) => {
 
     async function logInCallback() {
         try {
-            const res = await http.client.post('/auth/login', {
-                username, password
-            });
+            const payload: LoginDTO = {username, password};
+            const res = await http.client.post<AuthResponseDTO>('/auth/login', payload);
             const data = res.data;
             login(data.token, data);
         } catch (error) {
