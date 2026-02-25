@@ -2,43 +2,43 @@ import React from "react";
 import {View, Text, Image, Pressable} from "react-native";
 import {CONFIG} from "../../config/env";
 import ProfilePicDefault from "./ProfilePicDefault";
+import ProfilePic from "./ProfilePic";
+import {ChatUserDTO} from "../../screens/people/PeopleScreen";
 
-export type Person = {
-    username: string;
-    firstName: string;
-    lastName: string;
-    hasProfilePicture: boolean,
-};
+type Props = {
+    person: ChatUserDTO
+    onPress?: (p: ChatUserDTO) => void
+    selectable: boolean
+    selected: boolean
+}
 
-export default function PersonRow({
-                                      item,
-                                      onPress,
-                                  }: {
-    item: Person;
-    onPress?: (p: Person) => void;
-}) {
+export default function PersonRow({person, onPress, selectable, selected}: Props) {
     // name parsing
-    const name = `${item.firstName} ${item.lastName}`;
-
-
-    let profilePic;
-    if (item.hasProfilePicture) {
-        const url = `${CONFIG.API_URL}/users/${item.username}/profile-picture`;
-        profilePic = <Image source={{uri: url}} className="h-full w-full"/>;
-    } else {
-        profilePic = <ProfilePicDefault />
-    }
+    const name = `${person.firstName} ${person.lastName}`;
 
     return (
         <Pressable
-            onPress={() => onPress?.(item)}
-            className="flex-row items-center px-5 py-4 active:opacity-80"
+            onPress={() => onPress?.(person)}
+            className="flex-row items-center px-5 py-4 active:opacity-80 border"
         >
             <View className="h-12 w-12 rounded-full overflow-hidden">
-                {profilePic}
+                {<ProfilePic user={person}/>}
             </View>
 
-            <Text className="ml-4 text-white text-[16px] font-medium">{name}</Text>
+            <Text className="ml-4 flex-1 text-white text-[16px] font-medium">{name}</Text>
+
+            {/* selection indicator */}
+            {selectable && (
+                <View
+                    className={
+                        selected
+                            ? "w-[18px] h-[18px] rounded-full border-2 border-white items-center justify-center"
+                            : "w-[18px] h-[18px] rounded-full border-2 border-neutral-700"
+                    }
+                >
+                    {selected ? <View className="w-2 h-2 rounded-full bg-white"/> : null}
+                </View>
+            )}
         </Pressable>
     );
 }

@@ -1,13 +1,11 @@
-import {Person} from '../people/PersonRow';
 import {Pressable, View} from "react-native";
 import TimeSeparator from "./TimeSeparator";
-import React, {useEffect, useState} from "react";
+import React from "react";
 import RightBubble from "./RightBubble";
 import LeftBubble from "./LeftBubble";
-import {useChatEvents} from "../../context/ChatsEventsContext";
 import {components} from "../../../api/schema";
 
-type MessageDTO = components["schemas"]["MessageDTO"];
+export type MessageDTO = components["schemas"]["MessageDTO"];
 
 export type RenderMessage = {
     msg: MessageDTO;
