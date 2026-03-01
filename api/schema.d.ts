@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chats/{chatId}/memberships/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateMembershipRole"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chats/{chatId}/messages": {
         parameters: {
             query?: never;
@@ -46,6 +62,22 @@ export interface paths {
         get: operations["getMessagesForChat"];
         put?: never;
         post: operations["createMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chats/{chatId}/admin/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["giveUpAdminMembership"];
         delete?: never;
         options?: never;
         head?: never;
@@ -132,6 +164,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chats/{chatId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getChat"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chats/{chatId}/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMembershipsForChat"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chats/messages/{messageId}": {
         parameters: {
             query?: never;
@@ -174,6 +238,10 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        ActiveMembershipUpdateDTO: {
+            /** @enum {string} */
+            membershipType?: "ADMIN" | "EDITOR" | "MEMBER";
+        };
         CreateMessageDTO: {
             content?: string;
             /** Format: uuid */
@@ -198,6 +266,9 @@ export interface components {
             /** Format: date-time */
             created: string;
             content: string;
+        };
+        GiveUpAdminDTO: {
+            successorUsername?: string;
         };
         CreateChatDTO: {
             name: string;
@@ -283,6 +354,13 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
             empty?: boolean;
         };
+        ActiveMembershipDTO: {
+            /** Format: uuid */
+            id?: string;
+            chatUser?: components["schemas"]["ChatUserDTO"];
+            /** @enum {string} */
+            membershipType?: "ADMIN" | "EDITOR" | "MEMBER";
+        };
         PageChatDTO: {
             /** Format: int32 */
             totalPages?: number;
@@ -357,6 +435,31 @@ export interface operations {
             };
         };
     };
+    updateMembershipRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActiveMembershipUpdateDTO"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getMessagesForChat: {
         parameters: {
             query?: {
@@ -409,6 +512,30 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MessageDTO"];
                 };
+            };
+        };
+    };
+    giveUpAdminMembership: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GiveUpAdminDTO"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -558,6 +685,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    getChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatDTO"];
+                };
+            };
+        };
+    };
+    getMembershipsForChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveMembershipDTO"][];
                 };
             };
         };

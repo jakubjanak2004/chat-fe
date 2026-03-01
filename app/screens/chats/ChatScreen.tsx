@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import {
     View,
     FlatList,
@@ -19,6 +19,7 @@ import {CONFIG} from "../../config/env";
 import {useChatEvents} from "../../context/ChatsEventsContext";
 import {usePagedList} from "../../hooks/usePagedList";
 import {components, paths} from "../../../api/schema";
+import {useNavigation} from "@react-navigation/native";
 
 type PageMessageDTO = paths["/chats/{chatId}/messages"]["get"]["responses"]["200"]["content"]["application/json"];
 type GetMessagesQuery = NonNullable<paths["/chats/{chatId}/messages"]["get"]["parameters"]["query"]>;
@@ -65,6 +66,23 @@ export default function ChatScreen({route}: any) {
     const [replyingTo, setReplyingTo] = useState<MessageDTO | null>(null);
     const listRef = useRef<FlatList<RenderMessage>>(null);
     const lastLatestIdRef = useRef<string | null>(null);
+
+    const navigation = useNavigation<any>();
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => {
+                return (
+                    <Pressable
+                        onPress={() => navigation.navigate("ChatSettings", {id: chatId})}
+                        className={`px-3 py-2`}
+                    >
+                        <Text className="text-white text-base">Settings</Text>
+                    </Pressable>
+                )
+            },
+        });
+    }, [navigation]);
 
     // Messages live in global context (WS updates go there)
     const messages: MessageDTO[] = useMemo(() => {

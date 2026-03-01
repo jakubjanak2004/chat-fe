@@ -9,6 +9,7 @@ import ChatScreen from "../screens/chats/ChatScreen";
 import {ChatEventsProvider} from "../context/ChatsEventsContext";
 import {useAuth} from "../context/AuthContext";
 import {useCallback} from "react";
+import ChatSettings from "../screens/chats/ChatSettings";
 
 const Stack = createNativeStackNavigator();
 
@@ -48,6 +49,13 @@ export default function AppNavigator() {
                         component={ChatScreen}
                         options={{
                             title: "Chat",
+                        }}
+                    />
+                    <Stack.Screen
+                        name="ChatSettings"
+                        component={ChatSettings}
+                        options={{
+                            title: "ChatSettings",
                         }}
                     />
                     <Stack.Screen

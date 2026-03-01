@@ -35,7 +35,6 @@ export default function PeopleScreen() {
     const selectedUsers = useMemo(() => Array.from(selected.values()), [selected]);
     const selectedCount = selected.size;
 
-    const navigation = useNavigation<any>();
 
     const fetchPeoplePage = async (page: number) => {
         const params: UsersQuery = {
@@ -65,6 +64,7 @@ export default function PeopleScreen() {
         onContentSizeChange,
     } = usePagedList<ChatUserDTO>(fetchPeoplePage, [normalizedQuery]);
 
+    const navigation = useNavigation<any>();
 
     useLayoutEffect(() => {
         navigation.setOptions({
