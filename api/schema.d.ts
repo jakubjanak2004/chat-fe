@@ -46,7 +46,7 @@ export interface paths {
         get?: never;
         put: operations["updateMembershipRole"];
         post?: never;
-        delete?: never;
+        delete: operations["deleteMembership"];
         options?: never;
         head?: never;
         patch?: never;
@@ -303,15 +303,15 @@ export interface components {
             password: string;
         };
         PageChatUserDTO: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int32 */
             numberOfElements?: number;
             first?: boolean;
             last?: boolean;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ChatUserDTO"][];
@@ -337,15 +337,15 @@ export interface components {
             empty?: boolean;
         };
         PageMessageDTO: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int32 */
             numberOfElements?: number;
             first?: boolean;
             last?: boolean;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["MessageDTO"][];
@@ -356,21 +356,21 @@ export interface components {
         };
         ActiveMembershipDTO: {
             /** Format: uuid */
-            id?: string;
-            chatUser?: components["schemas"]["ChatUserDTO"];
+            id: string;
+            chatUser: components["schemas"]["ChatUserDTO"];
             /** @enum {string} */
-            membershipType?: "ADMIN" | "EDITOR" | "MEMBER";
+            membershipType: "ADMIN" | "EDITOR" | "MEMBER";
         };
         PageChatDTO: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int32 */
             numberOfElements?: number;
             first?: boolean;
             last?: boolean;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ChatDTO"][];
@@ -450,6 +450,27 @@ export interface operations {
                 "application/json": components["schemas"]["ActiveMembershipUpdateDTO"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteMembership: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {

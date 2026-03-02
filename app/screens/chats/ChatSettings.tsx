@@ -1,41 +1,21 @@
-import React, {useEffect, useLayoutEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {http} from "../../hooks/http";
 import {paths} from "../../../api/schema";
 import {Alert, Animated, Pressable, Text, View} from "react-native";
 import {useAuth} from "../../context/AuthContext";
 import ScrollView = Animated.ScrollView;
+import MembershipRow from "../../components/chat/MembershipRow";
 
 type ChatDTO = paths["/chats/{chatId}"]["get"]["responses"]["200"]["content"]["application/json"];
 type MembershipList = paths["/chats/{chatId}/memberships"]["get"]["responses"]["200"]["content"]["application/json"];
-type ActiveMembershipDTO = MembershipList[number];
-type MembershipType = NonNullable<ActiveMembershipDTO["membershipType"]>;
+export type ActiveMembershipDTO = MembershipList[number];
+export type MembershipType = NonNullable<ActiveMembershipDTO["membershipType"]>;
 type ActiveMembershipUpdateDTO = paths['/chats/{chatId}/memberships/{username}']["put"]["requestBody"]["content"]["application/json"]
 type GiveUpAdminDTO = paths["/chats/{chatId}/admin/transfer"]["post"]["requestBody"]["content"]["application/json"]
-
-function displayName(m: ActiveMembershipDTO) {
-    const u = m.chatUser;
-    if (!u) return "Unknown";
-    return u.username;
-}
-
-const ROLE_LABEL: Record<MembershipType, string> = {
-    ADMIN: "Admin",
-    EDITOR: "Editor",
-    MEMBER: "Member",
-};
-
-function getRoleOptions(current: MembershipType): MembershipType[] {
-    // return only roles different from current
-    if (current === "MEMBER") return ["EDITOR", "ADMIN"];
-    if (current === "EDITOR") return ["MEMBER", "ADMIN"];
-    // if current is ADMIN, we won't show controls anyway (but keep safe fallback)
-    return ["EDITOR", "MEMBER"];
-}
 
 export default function ChatSettings({route}: any) {
     const {user} = useAuth()
     const {id: chatId} = route.params
-    const [role, setRole] = useState()
     const [chat, setChat] = useState<ChatDTO>()
     const [memberships, setMemberships] = useState<ActiveMembershipDTO[]>([])
     const [loading, setLoading] = useState(false);
@@ -70,7 +50,7 @@ export default function ChatSettings({route}: any) {
         fetchAll();
     }, [chatId]);
 
-    async function changeRole(username: string, membershipType: MembershipType) {
+    async function handleChangeRole(username: string, membershipType: MembershipType) {
         const payload: ActiveMembershipUpdateDTO = { membershipType };
 
         await http.client.put(`/chats/${chatId}/memberships/${username}`, payload);
@@ -91,7 +71,7 @@ export default function ChatSettings({route}: any) {
         await http.client.post(`/chats/${chatId}/admin/transfer`, payload)
     }
 
-    async function onGiveUpAdminPress() {
+    async function handleGiveUpAdmin() {
         if (!isAdmin) return;
 
         Alert.alert(
@@ -127,6 +107,21 @@ export default function ChatSettings({route}: any) {
         );
     }
 
+    async function memberDelete(username: string) {
+        await http.client.delete(`/chats/${chatId}/memberships/${username}`)
+        setMemberships((prev) => prev.filter(m => m.chatUser.username !== username))
+    }
+
+    async function handleMemberDelete(username: string) {
+        Alert.alert(`Delete ${username}?`,
+            "Are you sure you want to delete this user from chat?",
+            [
+                {text: "Cancel", style: "cancel"},
+                {text: "Delete", style: "destructive",
+                onPress: () => memberDelete(username)},
+            ]);
+    }
+
     return <>
         <View className="flex-1 bg-black">
             <View className="px-4 pt-4 pb-3 border-b border-white/10">
@@ -145,7 +140,7 @@ export default function ChatSettings({route}: any) {
 
                         <Pressable
                             className="rounded-xl border border-white/15 px-4 py-3"
-                            onPress={onGiveUpAdminPress}
+                            onPress={handleGiveUpAdmin}
                         >
                             <Text className="text-white">Give up admin</Text>
                             <Text className="text-white/60 mt-1 text-xs">
@@ -162,74 +157,13 @@ export default function ChatSettings({route}: any) {
                         {memberships.map((m) => {
                             const username = m.chatUser?.username ?? "unknown";
                             const isMe = username === myUsername;
-                            const memberIsAdmin = m.membershipType === "ADMIN";
-
-                            const canChange =
-                                isAdmin && !isMe && !memberIsAdmin; // can't change self here; can't change other admins
-
-                            return (
-                                <View
-                                    key={username}
-                                    className="px-4 py-3 border-t border-white/10 first:border-t-0"
-                                >
-                                    <View className="flex-row items-center justify-between">
-                                        <View>
-                                            <Text className="text-white">
-                                                {displayName(m)} {isMe ? "(you)" : ""}
-                                            </Text>
-                                            <Text className="text-white/60 text-xs mt-1">
-                                                Role: {m.membershipType}
-                                            </Text>
-                                        </View>
-
-                                        {canChange ? (
-                                            (() => {
-                                                const currentRole = (m.membershipType ?? "MEMBER") as MembershipType;
-                                                const options = getRoleOptions(currentRole);
-
-                                                return (
-                                                    <View className="items-end">
-                                                        <Text className="text-white/50 text-xs mb-2">
-                                                            Change role to:
-                                                        </Text>
-
-                                                        <View className="flex-row gap-2">
-                                                            {options.map((targetRole) => (
-                                                                <Pressable
-                                                                    key={targetRole}
-                                                                    className="rounded-lg px-3 py-2 border border-white/15"
-                                                                    onPress={() =>
-                                                                        Alert.alert(
-                                                                            "Change role?",
-                                                                            `Change ${username} from ${ROLE_LABEL[currentRole]} to ${ROLE_LABEL[targetRole]}?`,
-                                                                            [
-                                                                                {text: "Cancel", style: "cancel"},
-                                                                                {
-                                                                                    text: "Confirm",
-                                                                                    onPress: () => changeRole(username, targetRole)
-                                                                                },
-                                                                            ]
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Text
-                                                                        className="text-white">{ROLE_LABEL[targetRole]}</Text>
-                                                                </Pressable>
-                                                            ))}
-                                                        </View>
-                                                    </View>
-                                                );
-                                            })()
-                                        ) : (
-                                            isAdmin && memberIsAdmin && !isMe ? (
-                                                <Text className="text-white/40 text-xs">
-                                                    You can’t change another admin
-                                                </Text>
-                                            ) : null
-                                        )}
-                                    </View>
-                                </View>
-                            );
+                            return <MembershipRow
+                                m={m}
+                                isMe={isMe}
+                                isSignedUserAdmin={isAdmin}
+                                onChangeRole={(username, targetRole) => handleChangeRole(username, targetRole)}
+                                onMemberDelete={handleMemberDelete}
+                            />
                         })}
                     </View>
                 </View>
