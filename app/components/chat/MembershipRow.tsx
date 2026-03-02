@@ -1,6 +1,6 @@
 import {Alert, Pressable, Text, View} from "react-native";
 import React from "react";
-import {ActiveMembershipDTO, MembershipType} from "../../screens/chats/ChatSettings";
+import {ActiveMembershipDTO, MembershipType} from "../../screens/chats/ChatSettingsScreen";
 
 function displayName(m: ActiveMembershipDTO) {
     const u = m.chatUser;

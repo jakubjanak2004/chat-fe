@@ -35,7 +35,6 @@ export default function PeopleScreen() {
     const selectedUsers = useMemo(() => Array.from(selected.values()), [selected]);
     const selectedCount = selected.size;
 
-
     const fetchPeoplePage = async (page: number) => {
         const params: UsersQuery = {
             query: normalizedQuery,
