@@ -193,7 +193,7 @@ export default function SettingsScreen() {
                 className="flex-1 pb-16"
                 keyboardShouldPersistTaps="handled"
             >
-                <View className="pt-2">
+                <View className="pt-2 pb-24">
                     <View className="items-center mt-4">
                         <View className="h-24 w-24 rounded-full overflow-hidden bg-neutral-700/60">
                             {profilePic}
