@@ -55,7 +55,7 @@ export default function AppNavigator() {
                         name="ChatSettings"
                         component={ChatSettingsScreen}
                         options={{
-                            title: "ChatSettingsScreen",
+                            title: "Chat Settings",
                         }}
                     />
                     <Stack.Screen
