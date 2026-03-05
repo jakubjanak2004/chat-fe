@@ -12,12 +12,13 @@ import {CONFIG} from "../../config/env";
 import ProfilePicDefault from "../../components/people/ProfilePicDefault";
 import {paths} from "../../../api/schema";
 import ScrollView = Animated.ScrollView;
+import InvitationRow from "../../components/chat/InvitationRow";
 
 type UpdateMyProfilePictureOp = paths["/users/me/profile-picture"]["put"];
 type ProfilePictureUpdate =
     NonNullable<UpdateMyProfilePictureOp["requestBody"]>["content"]["multipart/form-data"];
 
-type Invitations =
+export type Invitations =
     paths["/chats/me/invitations"]["get"]["responses"]["200"]["content"]["application/json"];
 
 function isValidEmail(v: string) {
@@ -126,7 +127,6 @@ export default function SettingsScreen() {
         }
     }
 
-    // ✅ Adjust these endpoints to your backend
     async function cancelInvitation(invitation: Invitations[number]) {
         const id = invitation.id;
         setInviteActionId(id);
@@ -138,8 +138,6 @@ export default function SettingsScreen() {
         try {
             // Option: POST cancel
             await http.client.delete(`/chats/me/invitations/${id}`);
-            // If your backend uses DELETE:
-            // await http.client.delete(`/chats/me/invitations/${id}`);
         } catch (e: any) {
             // revert on failure
             setInvitations(prev);
@@ -160,8 +158,6 @@ export default function SettingsScreen() {
         try {
             // Option: POST confirm
             await http.client.post(`/chats/me/invitations/${id}/accept`);
-            // If your backend uses /accept:
-            // await http.client.post(`/chats/me/invitations/${id}/accept`);
         } catch (e: any) {
             // revert on failure
             setInvitations(prev);
@@ -253,63 +249,12 @@ export default function SettingsScreen() {
                                     </View>
                                 ) : (
                                     invitations.map((inv) => {
-                                        const busy = inviteActionId === inv.id;
-
-                                        return (
-                                            <View key={inv.id} className="px-4 py-3 border-b border-white/10">
-                                                <Text className="text-white font-semibold">
-                                                    {inv.chatName}
-                                                </Text>
-
-                                                <Text className="text-white/50 text-xs mt-1">
-                                                    Members: {inv.chatUsers?.slice(0, 4).map((u) => u.username).join(", ")}
-                                                    {inv.chatUsers && inv.chatUsers.length > 4 ? ` +${inv.chatUsers.length - 4} more` : ""}
-                                                </Text>
-
-                                                <View className="flex-row gap-2 mt-3 justify-end">
-                                                    <Pressable
-                                                        disabled={busy}
-                                                        onPress={() =>
-                                                            Alert.alert(
-                                                                "Cancel invitation?",
-                                                                `Decline invite to "${inv.chatName}"?`,
-                                                                [
-                                                                    {text: "No", style: "cancel"},
-                                                                    {
-                                                                        text: "Decline",
-                                                                        style: "destructive",
-                                                                        onPress: () => cancelInvitation(inv)
-                                                                    },
-                                                                ]
-                                                            )
-                                                        }
-                                                        className={`rounded-xl px-3 py-2 border ${
-                                                            busy ? "border-white/10 bg-white/5" : "border-red-500/40 bg-red-500/10 active:bg-red-500/20"
-                                                        }`}
-                                                    >
-                                                        <Text
-                                                            className={`text-sm font-medium ${busy ? "text-white/40" : "text-red-400"}`}>
-                                                            Decline
-                                                        </Text>
-                                                    </Pressable>
-
-                                                    <Pressable
-                                                        disabled={busy}
-                                                        onPress={() => acceptInvitation(inv)}
-                                                        className={`rounded-xl px-3 py-2 border ${
-                                                            busy ? "border-white/10 bg-white/5" : "border-white/15 bg-white/10 active:bg-white/15"
-                                                        }`}
-                                                    >
-                                                        {busy ? (
-                                                            <ActivityIndicator/>
-                                                        ) : (
-                                                            <Text
-                                                                className="text-white text-sm font-medium">Accept</Text>
-                                                        )}
-                                                    </Pressable>
-                                                </View>
-                                            </View>
-                                        );
+                                        return <InvitationRow
+                                            inv={inv}
+                                            inviteActionId={inviteActionId}
+                                            onAcceptInvitation={acceptInvitation}
+                                            onCancelInvitation={cancelInvitation}
+                                        />
                                     })
                                 )}
                             </View>
