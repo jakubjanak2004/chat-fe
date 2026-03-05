@@ -24,6 +24,8 @@ type MembershipList =
 export type ActiveMembershipDTO = MembershipList[number];
 export type MembershipType = NonNullable<ActiveMembershipDTO["membershipType"]>;
 
+type InvitationList = paths["/chats/{chatId}/invitations"]["get"]["responses"]["200"]["content"]["application/json"];
+
 type ActiveMembershipUpdateDTO =
     paths["/chats/{chatId}/memberships/{username}"]["put"]["requestBody"]["content"]["application/json"];
 
@@ -47,6 +49,7 @@ export default function ChatSettings({route}: any) {
 
     const [chat, setChat] = useState<ChatDTO>();
     const [memberships, setMemberships] = useState<ActiveMembershipDTO[]>([]);
+    const [invitations, setInvitations] = useState<InvitationList>([]);
     const [loading, setLoading] = useState(false);
 
     const myUsername = user.username;
@@ -74,21 +77,31 @@ export default function ChatSettings({route}: any) {
     const memberUsernames = useMemo(() => {
         return new Set(
             memberships
-                .map((m) => m.chatUser?.username)
+                .map((m) => m.chatUser.username)
                 .filter(Boolean) as string[]
         );
     }, [memberships]);
 
+    const invitedUsernames = useMemo(() => {
+        return new Set(
+            invitations
+                .map((i) => i.chatUser.username)
+                .filter(Boolean) as string[]
+        );
+    }, [invitations])
+
     async function fetchAll() {
         setLoading(true);
         try {
-            const [chatRes, membershipsRes] = await Promise.all([
+            const [chatRes, membershipsRes, invitationsRes] = await Promise.all([
                 http.client.get<ChatDTO>(`/chats/${chatId}`),
                 http.client.get<MembershipList>(`/chats/${chatId}/memberships`),
+                http.client.get<InvitationList>(`/chats/${chatId}/invitations`),
             ]);
 
             setChat(chatRes.data);
             setMemberships(membershipsRes.data);
+            setInvitations(invitationsRes.data);
         } catch (e: any) {
             Alert.alert("Error", e?.message ?? "Failed to load chat settings");
         } finally {
@@ -229,6 +242,15 @@ export default function ChatSettings({route}: any) {
         );
     }
 
+    async function handleInvitationDelete(username: string) {
+        console.log(chatId, username)
+        await http.client.delete(`/chats/${chatId}/invitations/${username}`);
+
+        setInvitations((prev) =>
+            prev.filter(invitation => invitation.chatUser.username !== username)
+        )
+    }
+
     async function giveUpAdmin(successorUsername?: string) {
         const payload: GiveUpAdminDTO = {
             successorUsername,
@@ -337,7 +359,19 @@ export default function ChatSettings({route}: any) {
                                                 {people.map((u) => {
                                                     const username = u.username;
                                                     const alreadyMember = memberUsernames.has(username);
+                                                    const alreadyInvited = invitedUsernames.has(username);
                                                     const inviting = invitingUser === username;
+
+                                                    const disabled = alreadyMember || alreadyInvited || inviting;
+
+                                                    const buttonClasses = `rounded-lg px-3 py-2 border ${
+                                                        disabled
+                                                            ? "border-white/10 bg-white/5"
+                                                            : "border-white/15 bg-white/10 active:bg-white/15"
+                                                    }`;
+
+                                                    const labelColor = disabled ? "text-white/40" : "text-white";
+                                                    const labelText = alreadyMember ? "Member" : alreadyInvited ? "Invited" : "Invite";
 
                                                     return (
                                                         <View
@@ -355,23 +389,15 @@ export default function ChatSettings({route}: any) {
                                                             </View>
 
                                                             <Pressable
-                                                                disabled={alreadyMember || inviting}
+                                                                disabled={disabled}
                                                                 onPress={() => inviteByUsername(username)}
-                                                                className={`rounded-lg px-3 py-2 border ${
-                                                                    alreadyMember
-                                                                        ? "border-white/10 bg-white/5"
-                                                                        : "border-white/15 bg-white/10 active:bg-white/15"
-                                                                }`}
+                                                                className={buttonClasses}
                                                             >
                                                                 {inviting ? (
                                                                     <ActivityIndicator />
                                                                 ) : (
-                                                                    <Text
-                                                                        className={`${
-                                                                            alreadyMember ? "text-white/40" : "text-white"
-                                                                        } text-sm font-medium`}
-                                                                    >
-                                                                        {alreadyMember ? "Member" : "Invite"}
+                                                                    <Text className={`${labelColor} text-sm font-medium`}>
+                                                                        {labelText}
                                                                     </Text>
                                                                 )}
                                                             </Pressable>
@@ -380,11 +406,7 @@ export default function ChatSettings({route}: any) {
                                                 })}
 
                                                 {!peopleLast && (
-                                                    <Pressable
-                                                        disabled={peopleLoading}
-                                                        onPress={loadMorePeople}
-                                                        className="px-3 py-3"
-                                                    >
+                                                    <Pressable disabled={peopleLoading} onPress={loadMorePeople} className="px-3 py-3">
                                                         <Text className="text-white/70 text-sm">
                                                             {peopleLoading ? "Loading…" : "Load more"}
                                                         </Text>
@@ -423,6 +445,54 @@ export default function ChatSettings({route}: any) {
                                 />
                             );
                         })}
+                    </View>
+
+                    {/* Invitees list */}
+                    <Text className="text-white/80 mt-6 mb-2 font-semibold">Invitees</Text>
+
+                    <View className="rounded-2xl border border-white/10 overflow-hidden">
+                        {invitations.length === 0 ? (
+                            <View className="px-3 py-3">
+                                <Text className="text-white/50 text-sm">No pending invitations.</Text>
+                            </View>
+                        ) : (
+                            invitations.map((i) => {
+                                const username = i.chatUser?.username ?? "unknown";
+                                const isMe = username === myUsername;
+
+                                return (
+                                    <View
+                                        key={(i as any).id ?? username}
+                                        className="flex-row items-center justify-between px-3 py-3 border-b border-white/10"
+                                    >
+                                        <View className="flex-1 pr-3">
+                                            <Text className="text-white text-sm font-medium">{username}</Text>
+
+                                            {"displayName" in (i.chatUser as any) && (i.chatUser as any)?.displayName ? (
+                                                <Text className="text-white/50 text-xs mt-0.5">
+                                                    {(i.chatUser as any).displayName}
+                                                </Text>
+                                            ) : null}
+                                        </View>
+
+                                        {isAdmin && !isMe ? (
+                                            <Pressable
+                                                onPress={() => handleInvitationDelete(username)}
+                                                className="rounded-lg px-3 py-2 border border-red-500/40 bg-red-500/10 active:bg-red-500/20"
+                                            >
+                                                <Text className="text-red-400 text-sm font-medium">
+                                                    Remove Invitation
+                                                </Text>
+                                            </Pressable>
+                                        ) : (
+                                            <View className="rounded-lg px-3 py-2 border border-white/10 bg-white/5">
+                                                <Text className="text-white/40 text-sm font-medium">—</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                );
+                            })
+                        )}
                     </View>
                 </View>
             </ScrollView>

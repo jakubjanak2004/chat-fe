@@ -45,7 +45,7 @@ export interface paths {
         };
         get?: never;
         put: operations["updateMembershipRole"];
-        post?: never;
+        post: operations["inviteChatUser"];
         delete: operations["deleteMembership"];
         options?: never;
         head?: never;
@@ -94,6 +94,22 @@ export interface paths {
         get: operations["getChatsForMe"];
         put?: never;
         post: operations["createChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chats/me/invitations/{invitationId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acceptInvitation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -196,6 +212,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chats/{chatId}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInvitationsForChat"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/chats/messages/{messageId}": {
         parameters: {
             query?: never;
@@ -223,6 +255,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chats/me/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInvitationsForMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chats/me/invitations/{invitationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteInvitation"];
         options?: never;
         head?: never;
         patch?: never;
@@ -275,6 +339,7 @@ export interface components {
             membersList: string[];
         };
         ChatDTO: {
+            /** Format: uuid */
             id: string;
             name: string;
             chatUsers?: components["schemas"]["ChatUserDTO"][];
@@ -303,15 +368,15 @@ export interface components {
             password: string;
         };
         PageChatUserDTO: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ChatUserDTO"][];
@@ -337,15 +402,15 @@ export interface components {
             empty?: boolean;
         };
         PageMessageDTO: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["MessageDTO"][];
@@ -361,16 +426,21 @@ export interface components {
             /** @enum {string} */
             membershipType: "ADMIN" | "EDITOR" | "MEMBER";
         };
+        InvitationDTO: {
+            /** Format: uuid */
+            id: string;
+            chatUser: components["schemas"]["ChatUserDTO"];
+        };
         PageChatDTO: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ChatDTO"][];
@@ -378,6 +448,12 @@ export interface components {
             number?: number;
             sort?: components["schemas"]["SortObject"];
             empty?: boolean;
+        };
+        UserInvitationsDTO: {
+            /** Format: uuid */
+            id: string;
+            chatName: string;
+            chatUsers: components["schemas"]["ChatUserDTO"][];
         };
     };
     responses: never;
@@ -450,6 +526,27 @@ export interface operations {
                 "application/json": components["schemas"]["ActiveMembershipUpdateDTO"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inviteChatUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -612,6 +709,26 @@ export interface operations {
             };
         };
     };
+    acceptInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     signUp: {
         parameters: {
             query?: never;
@@ -754,6 +871,28 @@ export interface operations {
             };
         };
     };
+    getInvitationsForChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationDTO"][];
+                };
+            };
+        };
+    };
     getMessage: {
         parameters: {
             query?: never;
@@ -795,6 +934,46 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ChatDTO"];
                 };
+            };
+        };
+    };
+    getInvitationsForMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserInvitationsDTO"][];
+                };
+            };
+        };
+    };
+    deleteInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
