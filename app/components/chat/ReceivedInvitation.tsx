@@ -10,7 +10,7 @@ type Props = {
     onAcceptInvitation: (invitation: Invitation) => void
 }
 
-export default function InvitationRow({inv, inviteActionId, onCancelInvitation, onAcceptInvitation}: Props) {
+export default function ReceivedInvitation({inv, inviteActionId, onCancelInvitation, onAcceptInvitation}: Props) {
     const busy = inviteActionId === inv.id;
 
     return (

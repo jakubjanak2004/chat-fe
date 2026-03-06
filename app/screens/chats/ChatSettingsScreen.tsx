@@ -4,38 +4,30 @@ import {paths} from "../../../api/schema";
 import {
     ActivityIndicator,
     Alert,
-    Animated,
-    Pressable,
+    Pressable, ScrollView,
     Text,
     TextInput,
     View,
 } from "react-native";
 import {useAuth} from "../../context/AuthContext";
 import MembershipRow from "../../components/chat/MembershipRow";
+import InvitePerson from "../../components/people/InvitePerson";
+import InvitationManagement from "../../components/chat/InvitationManagement";
 
-const ScrollView = Animated.ScrollView;
+type ChatDTO = paths["/chats/{chatId}"]["get"]["responses"]["200"]["content"]["application/json"];
 
-type ChatDTO =
-    paths["/chats/{chatId}"]["get"]["responses"]["200"]["content"]["application/json"];
-
-type MembershipList =
-    paths["/chats/{chatId}/memberships"]["get"]["responses"]["200"]["content"]["application/json"];
+type MembershipList = paths["/chats/{chatId}/memberships"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export type ActiveMembershipDTO = MembershipList[number];
 export type MembershipType = NonNullable<ActiveMembershipDTO["membershipType"]>;
 
-type InvitationList = paths["/chats/{chatId}/invitations"]["get"]["responses"]["200"]["content"]["application/json"];
+export type InvitationList = paths["/chats/{chatId}/invitations"]["get"]["responses"]["200"]["content"]["application/json"];
 
-type ActiveMembershipUpdateDTO =
-    paths["/chats/{chatId}/memberships/{username}"]["put"]["requestBody"]["content"]["application/json"];
+type ActiveMembershipUpdateDTO = paths["/chats/{chatId}/memberships/{username}"]["put"]["requestBody"]["content"]["application/json"];
 
-type GiveUpAdminDTO =
-    paths["/chats/{chatId}/admin/transfer"]["post"]["requestBody"]["content"]["application/json"];
+type GiveUpAdminDTO = paths["/chats/{chatId}/admin/transfer"]["post"]["requestBody"]["content"]["application/json"];
 
-// These are based on your existing usage of /users paging.
-// If your generated schema differs, keep your current aliases for these.
-type PageChatUserDTO =
-    paths["/users"]["get"]["responses"]["200"]["content"]["application/json"];
+type PageChatUserDTO = paths["/users"]["get"]["responses"]["200"]["content"]["application/json"];
 type ChatUserDTO = NonNullable<PageChatUserDTO["content"]>[number];
 type UsersQuery = NonNullable<paths["/users"]["get"]["parameters"]["query"]>;
 
@@ -54,9 +46,6 @@ export default function ChatSettings({route}: any) {
 
     const myUsername = user.username;
 
-    // -----------------------------
-    // Invite/search state
-    // -----------------------------
     const [inviteQuery, setInviteQuery] = useState("");
     const normalizedQuery = inviteQuery.trim();
 
@@ -113,9 +102,6 @@ export default function ChatSettings({route}: any) {
         fetchAll();
     }, [chatId]);
 
-    // -----------------------------
-    // /users paging search (your approach)
-    // -----------------------------
     const fetchPeoplePage = async (page: number) => {
         const params: UsersQuery = {
             query: normalizedQuery,
@@ -137,7 +123,6 @@ export default function ChatSettings({route}: any) {
         };
     };
 
-    // Debounced search whenever inviteQuery changes
     useEffect(() => {
         if (!isAdmin) return;
 
@@ -356,54 +341,15 @@ export default function ChatSettings({route}: any) {
                                             </View>
                                         ) : (
                                             <>
-                                                {people.map((u) => {
-                                                    const username = u.username;
-                                                    const alreadyMember = memberUsernames.has(username);
-                                                    const alreadyInvited = invitedUsernames.has(username);
-                                                    const inviting = invitingUser === username;
-
-                                                    const disabled = alreadyMember || alreadyInvited || inviting;
-
-                                                    const buttonClasses = `rounded-lg px-3 py-2 border ${
-                                                        disabled
-                                                            ? "border-white/10 bg-white/5"
-                                                            : "border-white/15 bg-white/10 active:bg-white/15"
-                                                    }`;
-
-                                                    const labelColor = disabled ? "text-white/40" : "text-white";
-                                                    const labelText = alreadyMember ? "Member" : alreadyInvited ? "Invited" : "Invite";
-
-                                                    return (
-                                                        <View
-                                                            key={username}
-                                                            className="flex-row items-center justify-between px-3 py-3 border-b border-white/10"
-                                                        >
-                                                            <View className="flex-1 pr-3">
-                                                                <Text className="text-white text-sm font-medium">{username}</Text>
-
-                                                                {"displayName" in (u as any) && (u as any).displayName ? (
-                                                                    <Text className="text-white/50 text-xs mt-0.5">
-                                                                        {(u as any).displayName}
-                                                                    </Text>
-                                                                ) : null}
-                                                            </View>
-
-                                                            <Pressable
-                                                                disabled={disabled}
-                                                                onPress={() => inviteByUsername(username)}
-                                                                className={buttonClasses}
-                                                            >
-                                                                {inviting ? (
-                                                                    <ActivityIndicator />
-                                                                ) : (
-                                                                    <Text className={`${labelColor} text-sm font-medium`}>
-                                                                        {labelText}
-                                                                    </Text>
-                                                                )}
-                                                            </Pressable>
-                                                        </View>
-                                                    );
-                                                })}
+                                                {people.map((u) =>
+                                                    <InvitePerson
+                                                        u={u}
+                                                        isMember={memberUsernames.has(u.username)}
+                                                        isInvited={invitedUsernames.has(u.username)}
+                                                        invitingUsername={invitingUser}
+                                                        inviteUser={(user) => inviteByUsername(user.username)}
+                                                    />
+                                                )}
 
                                                 {!peopleLast && (
                                                     <Pressable disabled={peopleLoading} onPress={loadMorePeople} className="px-3 py-3">
@@ -456,42 +402,13 @@ export default function ChatSettings({route}: any) {
                                 <Text className="text-white/50 text-sm">No pending invitations.</Text>
                             </View>
                         ) : (
-                            invitations.map((i) => {
-                                const username = i.chatUser?.username ?? "unknown";
-                                const isMe = username === myUsername;
-
-                                return (
-                                    <View
-                                        key={(i as any).id ?? username}
-                                        className="flex-row items-center justify-between px-3 py-3 border-b border-white/10"
-                                    >
-                                        <View className="flex-1 pr-3">
-                                            <Text className="text-white text-sm font-medium">{username}</Text>
-
-                                            {"displayName" in (i.chatUser as any) && (i.chatUser as any)?.displayName ? (
-                                                <Text className="text-white/50 text-xs mt-0.5">
-                                                    {(i.chatUser as any).displayName}
-                                                </Text>
-                                            ) : null}
-                                        </View>
-
-                                        {isAdmin && !isMe ? (
-                                            <Pressable
-                                                onPress={() => handleInvitationDelete(username)}
-                                                className="rounded-lg px-3 py-2 border border-red-500/40 bg-red-500/10 active:bg-red-500/20"
-                                            >
-                                                <Text className="text-red-400 text-sm font-medium">
-                                                    Remove Invitation
-                                                </Text>
-                                            </Pressable>
-                                        ) : (
-                                            <View className="rounded-lg px-3 py-2 border border-white/10 bg-white/5">
-                                                <Text className="text-white/40 text-sm font-medium">—</Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                );
-                            })
+                            invitations.map((i) =>
+                                <InvitationManagement
+                                    invitation={i}
+                                    canUpdate={isAdmin}
+                                    handleInvitationDelete={(invitation) => handleInvitationDelete(invitation.chatUser.username)}
+                                />
+                            )
                         )}
                     </View>
                 </View>

@@ -12,7 +12,7 @@ import {CONFIG} from "../../config/env";
 import ProfilePicDefault from "../../components/people/ProfilePicDefault";
 import {paths} from "../../../api/schema";
 import ScrollView = Animated.ScrollView;
-import InvitationRow from "../../components/chat/InvitationRow";
+import ReceivedInvitation from "../../components/chat/ReceivedInvitation";
 
 type UpdateMyProfilePictureOp = paths["/users/me/profile-picture"]["put"];
 type ProfilePictureUpdate =
@@ -249,7 +249,7 @@ export default function SettingsScreen() {
                                     </View>
                                 ) : (
                                     invitations.map((inv) => {
-                                        return <InvitationRow
+                                        return <ReceivedInvitation
                                             inv={inv}
                                             inviteActionId={inviteActionId}
                                             onAcceptInvitation={acceptInvitation}
