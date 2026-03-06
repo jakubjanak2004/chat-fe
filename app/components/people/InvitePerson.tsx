@@ -1,12 +1,12 @@
 import {ActivityIndicator, Pressable, View, Text} from "react-native";
-import {ChatUserDTO} from "../../screens/people/PeopleScreen";
+import {ChatUserResponse} from "../../screens/people/PeopleScreen";
 
 type Props = {
-    u: ChatUserDTO
+    u: ChatUserResponse
     isMember: boolean
     isInvited: boolean
     invitingUsername: string | null
-    inviteUser: (user: ChatUserDTO) => void
+    inviteUser: (user: ChatUserResponse) => void
 }
 
 export default function InvitePerson({u, isMember, isInvited, invitingUsername, inviteUser}: Props) {

@@ -14,21 +14,15 @@ import MembershipRow from "../../components/chat/MembershipRow";
 import InvitePerson from "../../components/people/InvitePerson";
 import InvitationManagement from "../../components/chat/InvitationManagement";
 
-type ChatDTO = paths["/chats/{chatId}"]["get"]["responses"]["200"]["content"]["application/json"];
-
-type MembershipList = paths["/chats/{chatId}/memberships"]["get"]["responses"]["200"]["content"]["application/json"];
-
-export type ActiveMembershipDTO = MembershipList[number];
-export type MembershipType = NonNullable<ActiveMembershipDTO["membershipType"]>;
-
-export type InvitationList = paths["/chats/{chatId}/invitations"]["get"]["responses"]["200"]["content"]["application/json"];
-
-type ActiveMembershipUpdateDTO = paths["/chats/{chatId}/memberships/{username}"]["put"]["requestBody"]["content"]["application/json"];
-
-type GiveUpAdminDTO = paths["/chats/{chatId}/admin/transfer"]["post"]["requestBody"]["content"]["application/json"];
-
-type PageChatUserDTO = paths["/users"]["get"]["responses"]["200"]["content"]["application/json"];
-type ChatUserDTO = NonNullable<PageChatUserDTO["content"]>[number];
+type ChatResponse = paths["/chats/{chatId}"]["get"]["responses"]["200"]["content"]["application/json"];
+type MembershipsResponse = paths["/chats/{chatId}/memberships"]["get"]["responses"]["200"]["content"]["application/json"];
+export type ActiveMembershipResponse = MembershipsResponse[number];
+export type MembershipType = NonNullable<ActiveMembershipResponse["membershipType"]>;
+export type InvitationsResponse = paths["/chats/{chatId}/invitations"]["get"]["responses"]["200"]["content"]["application/json"];
+type ActiveMembershipUpdateRequest = paths["/chats/{chatId}/memberships/{username}"]["put"]["requestBody"]["content"]["application/json"];
+type TransferAdminRequest = paths["/chats/{chatId}/admin/transfer"]["post"]["requestBody"]["content"]["application/json"];
+type UsersResponse = paths["/users"]["get"]["responses"]["200"]["content"]["application/json"];
+type UserResponse = NonNullable<UsersResponse["content"]>[number];
 type UsersQuery = NonNullable<paths["/users"]["get"]["parameters"]["query"]>;
 
 const CONFIG = {
@@ -39,9 +33,9 @@ export default function ChatSettings({route}: any) {
     const {user} = useAuth();
     const {id: chatId} = route.params;
 
-    const [chat, setChat] = useState<ChatDTO>();
-    const [memberships, setMemberships] = useState<ActiveMembershipDTO[]>([]);
-    const [invitations, setInvitations] = useState<InvitationList>([]);
+    const [chat, setChat] = useState<ChatResponse>();
+    const [memberships, setMemberships] = useState<ActiveMembershipResponse[]>([]);
+    const [invitations, setInvitations] = useState<InvitationsResponse>([]);
     const [loading, setLoading] = useState(false);
 
     const myUsername = user.username;
@@ -49,7 +43,7 @@ export default function ChatSettings({route}: any) {
     const [inviteQuery, setInviteQuery] = useState("");
     const normalizedQuery = inviteQuery.trim();
 
-    const [people, setPeople] = useState<ChatUserDTO[]>([]);
+    const [people, setPeople] = useState<UserResponse[]>([]);
     const [peoplePage, setPeoplePage] = useState(0);
     const [peopleLast, setPeopleLast] = useState(true);
     const [peopleLoading, setPeopleLoading] = useState(false);
@@ -83,9 +77,9 @@ export default function ChatSettings({route}: any) {
         setLoading(true);
         try {
             const [chatRes, membershipsRes, invitationsRes] = await Promise.all([
-                http.client.get<ChatDTO>(`/chats/${chatId}`),
-                http.client.get<MembershipList>(`/chats/${chatId}/memberships`),
-                http.client.get<InvitationList>(`/chats/${chatId}/invitations`),
+                http.client.get<ChatResponse>(`/chats/${chatId}`),
+                http.client.get<MembershipsResponse>(`/chats/${chatId}/memberships`),
+                http.client.get<InvitationsResponse>(`/chats/${chatId}/invitations`),
             ]);
 
             setChat(chatRes.data);
@@ -110,14 +104,14 @@ export default function ChatSettings({route}: any) {
             sort: ["username,asc"],
         };
 
-        const res = await http.client.get<PageChatUserDTO>("/users", {
+        const res = await http.client.get<UsersResponse>("/users", {
             params,
             paramsSerializer: {indexes: null},
         });
 
         const data = res.data;
         return {
-            content: (data.content ?? []) as ChatUserDTO[],
+            content: (data.content ?? []) as UserResponse[],
             number: data.number ?? page,
             last: data.last ?? false,
         };
@@ -216,7 +210,7 @@ export default function ChatSettings({route}: any) {
     }
 
     async function handleChangeRole(username: string, membershipType: MembershipType) {
-        const payload: ActiveMembershipUpdateDTO = {membershipType};
+        const payload: ActiveMembershipUpdateRequest = {membershipType};
 
         await http.client.put(`/chats/${chatId}/memberships/${username}`, payload);
 
@@ -237,7 +231,7 @@ export default function ChatSettings({route}: any) {
     }
 
     async function giveUpAdmin(successorUsername?: string) {
-        const payload: GiveUpAdminDTO = {
+        const payload: TransferAdminRequest = {
             successorUsername,
         };
         await http.client.post(`/chats/${chatId}/admin/transfer`, payload);

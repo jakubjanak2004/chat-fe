@@ -1,7 +1,7 @@
 import {Pressable, View, Text} from "react-native";
-import {InvitationList} from "../../screens/chats/ChatSettingsScreen";
+import {InvitationsResponse} from "../../screens/chats/ChatSettingsScreen";
 
-type Invitation = InvitationList[number]
+type Invitation = InvitationsResponse[number]
 
 type Props = {
     invitation: Invitation

@@ -14,7 +14,7 @@ export default function ReceivedInvitation({inv, inviteActionId, onCancelInvitat
     const busy = inviteActionId === inv.id;
 
     return (
-        <View key={inv.id} className="px-4 py-3 border-b border-white/10">
+        <View className="px-4 py-3 border-b border-white/10">
             <Text className="text-white font-semibold">
                 {inv.chatName}
             </Text>

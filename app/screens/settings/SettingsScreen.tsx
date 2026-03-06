@@ -14,9 +14,8 @@ import {paths} from "../../../api/schema";
 import ScrollView = Animated.ScrollView;
 import ReceivedInvitation from "../../components/chat/ReceivedInvitation";
 
-type UpdateMyProfilePictureOp = paths["/users/me/profile-picture"]["put"];
-type ProfilePictureUpdate =
-    NonNullable<UpdateMyProfilePictureOp["requestBody"]>["content"]["multipart/form-data"];
+type UpdateMyProfilePicturePut = paths["/users/me/profile-picture"]["put"];
+type ProfilePictureUpdate = NonNullable<UpdateMyProfilePicturePut["requestBody"]>["content"]["multipart/form-data"];
 
 export type Invitations =
     paths["/chats/me/invitations"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -250,6 +249,7 @@ export default function SettingsScreen() {
                                 ) : (
                                     invitations.map((inv) => {
                                         return <ReceivedInvitation
+                                            key={inv.id}
                                             inv={inv}
                                             inviteActionId={inviteActionId}
                                             onAcceptInvitation={acceptInvitation}

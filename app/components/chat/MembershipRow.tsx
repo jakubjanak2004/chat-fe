@@ -1,8 +1,8 @@
 import {Alert, Pressable, Text, View} from "react-native";
 import React from "react";
-import {ActiveMembershipDTO, MembershipType} from "../../screens/chats/ChatSettingsScreen";
+import {ActiveMembershipResponse, MembershipType} from "../../screens/chats/ChatSettingsScreen";
 
-function displayName(m: ActiveMembershipDTO) {
+function displayName(m: ActiveMembershipResponse) {
     const u = m.chatUser;
     if (!u) return "Unknown";
     return u.username;
@@ -23,7 +23,7 @@ function getRoleOptions(current: MembershipType): MembershipType[] {
 }
 
 type Props = {
-    m: ActiveMembershipDTO
+    m: ActiveMembershipResponse
     isMe: boolean
     isSignedUserAdmin: boolean
     onChangeRole: (username: string, targetRole: MembershipType) => void

@@ -3,11 +3,11 @@ import {View, Text, Image, Pressable} from "react-native";
 import {CONFIG} from "../../config/env";
 import ProfilePicDefault from "./ProfilePicDefault";
 import ProfilePic from "./ProfilePic";
-import {ChatUserDTO} from "../../screens/people/PeopleScreen";
+import {ChatUserResponse} from "../../screens/people/PeopleScreen";
 
 type Props = {
-    person: ChatUserDTO
-    onPress?: (p: ChatUserDTO) => void
+    person: ChatUserResponse
+    onPress?: (p: ChatUserResponse) => void
     selectable: boolean
     selected: boolean
 }

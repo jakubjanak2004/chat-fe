@@ -2,13 +2,13 @@ import {Pressable, View, Image, Text} from "react-native";
 import {MessageDTO} from "../message/MessageRow";
 import {useNavigation} from "@react-navigation/native";
 import ProfilePicDefault from "../people/ProfilePicDefault";
-import {ChatUserDTO} from "../../screens/people/PeopleScreen";
+import {ChatUserResponse} from "../../screens/people/PeopleScreen";
 
 export type Chat = {
     id: string;
     name: string;
     lastMessage: MessageDTO,
-    chatUsers: ChatUserDTO[],
+    chatUsers: ChatUserResponse[],
     avatar?: string;
 };
 

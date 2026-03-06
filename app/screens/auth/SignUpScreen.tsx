@@ -11,16 +11,15 @@ import {http} from "../../hooks/http";
 import {useAuth} from "../../context/AuthContext";
 import {paths} from "../../../api/schema";
 
-type SignUpDTO = paths["/auth/signup"]["post"]["requestBody"]["content"]["application/json"];
-type AuthResponseDTO = paths["/auth/signup"]["post"]["responses"]["200"]["content"]["application/json"];
+type SignUpRequest = paths["/auth/signup"]["post"]["requestBody"]["content"]["application/json"];
+type SignUpResponse = paths["/auth/signup"]["post"]["responses"]["200"]["content"]["application/json"];
 
 
-type SignUpScreenProps = {
+type Props = {
     navigation: NativeStackNavigationProp<any>;
-    route: RouteProp<any>;
 }
 
-const SignUpScreen = ({navigation}: SignUpScreenProps) => {
+const SignUpScreen = ({navigation}: Props) => {
     const {login} = useAuth();
     const [username, setUsername] = React.useState<string>("");
     const [firstName, setFistName] = React.useState<string>("");
@@ -30,14 +29,14 @@ const SignUpScreen = ({navigation}: SignUpScreenProps) => {
 
     async function onSignUp() {
         try {
-            const payload: SignUpDTO = {
+            const payload: SignUpRequest = {
                 username,
                 firstName,
                 lastName,
                 email,
                 password,
             }
-            const res = await http.client.post<AuthResponseDTO>('/auth/signup', payload);
+            const res = await http.client.post<SignUpResponse>('/auth/signup', payload);
             const data = res.data;
             login(data.token, data);
         } catch (error) {

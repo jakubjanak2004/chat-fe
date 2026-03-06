@@ -15,7 +15,7 @@ import {useChatEvents} from "../../context/ChatsEventsContext";
 import {paths} from "../../../api/schema";
 
 type ChatQuery = NonNullable<paths["/chats/me"]["get"]["parameters"]["query"]>;
-type PageChatDTO = paths["/chats/me"]["get"]["responses"]["200"]["content"]["application/json"];
+type ChatsPageResponse = paths["/chats/me"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export default function ChatsScreen() {
     const [query, setQuery] = useState("");
@@ -31,7 +31,7 @@ export default function ChatsScreen() {
             size: CONFIG.PAGE_SIZE,
             sort: ["name,asc"]
         }
-        const res = await http.client.get<PageChatDTO>("/chats/me", {
+        const res = await http.client.get<ChatsPageResponse>("/chats/me", {
             params,
             paramsSerializer: {indexes: null},
         });

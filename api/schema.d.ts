@@ -155,7 +155,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getUsersNotMePageable"];
+        get: operations["getUsersNotMe"];
         put?: never;
         post?: never;
         delete?: never;
@@ -276,7 +276,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/chats/me/invitations/{invitationId}": {
+    "/chats/{chatId}/invitations/{username}": {
         parameters: {
             query?: never;
             header?: never;
@@ -287,6 +287,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["deleteInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chats/me/invitations/{invitationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteInvitation_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -304,7 +320,7 @@ export interface components {
         };
         ActiveMembershipUpdateDTO: {
             /** @enum {string} */
-            membershipType?: "ADMIN" | "EDITOR" | "MEMBER";
+            membershipType: "ADMIN" | "EDITOR" | "MEMBER";
         };
         CreateMessageDTO: {
             content?: string;
@@ -372,11 +388,11 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ChatUserDTO"][];
@@ -406,11 +422,11 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["MessageDTO"][];
@@ -436,11 +452,11 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ChatDTO"][];
@@ -777,7 +793,7 @@ export interface operations {
             };
         };
     };
-    getUsersNotMePageable: {
+    getUsersNotMe: {
         parameters: {
             query?: {
                 query?: string;
@@ -958,6 +974,27 @@ export interface operations {
         };
     };
     deleteInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteInvitation_1: {
         parameters: {
             query?: never;
             header?: never;

@@ -19,14 +19,14 @@ import {CONFIG} from "../../config/env";
 import {useChatEvents} from "../../context/ChatsEventsContext";
 import {usePagedList} from "../../hooks/usePagedList";
 import {components, paths} from "../../../api/schema";
-import {useNavigation} from "@react-navigation/native";
+import {RouteProp, useNavigation} from "@react-navigation/native";
 
-type PageMessageDTO = paths["/chats/{chatId}/messages"]["get"]["responses"]["200"]["content"]["application/json"];
+type MessagePageResponse = paths["/chats/{chatId}/messages"]["get"]["responses"]["200"]["content"]["application/json"];
 type GetMessagesQuery = NonNullable<paths["/chats/{chatId}/messages"]["get"]["parameters"]["query"]>;
-type MessageDTO = components["schemas"]["MessageDTO"];
-type CreateChatDTO = paths["/chats/me"]["post"]["requestBody"]["content"]["application/json"];
-type ChatDTO = paths["/chats/me"]["post"]["responses"]["200"]["content"]["application/json"];
-type CreateMessageDTO = paths["/chats/{chatId}/messages"]["post"]["requestBody"]["content"]["application/json"];
+type MessageResponse = components["schemas"]["MessageDTO"];
+type CreateChatRequest = paths["/chats/me"]["post"]["requestBody"]["content"]["application/json"];
+type ChatResponse = paths["/chats/me"]["post"]["responses"]["200"]["content"]["application/json"];
+type CreateMessageRequest = paths["/chats/{chatId}/messages"]["post"]["requestBody"]["content"]["application/json"];
 
 function isDifferentDay(aMillis: number, bMillis: number) {
     const a = new Date(aMillis);
@@ -38,7 +38,7 @@ function isDifferentDay(aMillis: number, bMillis: number) {
     );
 }
 
-function shouldShowTimeSeparator(messages: MessageDTO[], index: number) {
+function shouldShowTimeSeparator(messages: MessageResponse[], index: number) {
     const curr = messages[index];
     const nextOlder = messages[index + 1];
     if (!nextOlder) return true;
@@ -50,9 +50,20 @@ function shouldShowTimeSeparator(messages: MessageDTO[], index: number) {
     return (currMs - nextMs) / (1000 * 60) >= CONFIG.SEPARATOR_GAP_MIN;
 }
 
-export default function ChatScreen({route}: any) {
+type RootStackParamList = {
+    Chat: {
+        id?: string;
+        personUsernameFallback?: string;
+    };
+};
+
+type Props = {
+    route: RouteProp<RootStackParamList>
+}
+
+export default function ChatScreen({route}: Props) {
     const {user} = useAuth();
-    const {id, personUsernameFallback} = route.params as { id?: string, personUsernameFallback?: string };
+    const {id, personUsernameFallback} = route.params;
     const {
         setActiveChatId,
         markChatRead,
@@ -63,7 +74,7 @@ export default function ChatScreen({route}: any) {
 
     const [chatId, setChatId] = useState<string | null>(id ?? null);
     const [input, setInput] = useState("");
-    const [replyingTo, setReplyingTo] = useState<MessageDTO | null>(null);
+    const [replyingTo, setReplyingTo] = useState<MessageResponse | null>(null);
     const listRef = useRef<FlatList<RenderMessage>>(null);
     const lastLatestIdRef = useRef<string | null>(null);
 
@@ -85,7 +96,7 @@ export default function ChatScreen({route}: any) {
     }, [navigation]);
 
     // Messages live in global context (WS updates go there)
-    const messages: MessageDTO[] = useMemo(() => {
+    const messages: MessageResponse[] = useMemo(() => {
             if (!chatId) return []
             return (messagesByChatId[chatId] ?? [])
         },
@@ -117,10 +128,10 @@ export default function ChatScreen({route}: any) {
             size: CONFIG.PAGE_SIZE,
             sort: ["created,desc"],
         };
-        const res = await http.client.get<PageMessageDTO>(`/chats/${chatId}/messages`, {params});
+        const res = await http.client.get<MessagePageResponse>(`/chats/${chatId}/messages`, {params});
         const data = res.data;
         return {
-            content: (data.content ?? []) as MessageDTO[],
+            content: (data.content ?? []) as MessageResponse[],
             number: data.number ?? page,
             last: data.last ?? false,
         };
@@ -133,7 +144,7 @@ export default function ChatScreen({route}: any) {
         onEndReached,
         onLayout,
         onContentSizeChange,
-    } = usePagedList<MessageDTO>(
+    } = usePagedList<MessageResponse>(
         fetchPage,
         [chatId],
         {
@@ -169,11 +180,11 @@ export default function ChatScreen({route}: any) {
         let targetChatId = chatId;
 
         if (!targetChatId && !!personUsernameFallback) {
-            const payload: CreateChatDTO = {
+            const payload: CreateChatRequest = {
                 name: personUsernameFallback,
                 membersList: [personUsernameFallback],
             }
-            const res = await http.client.post<ChatDTO>("/chats/me", payload);
+            const res = await http.client.post<ChatResponse>("/chats/me", payload);
 
             const chat = res.data;
             targetChatId = chat.id;
@@ -182,11 +193,11 @@ export default function ChatScreen({route}: any) {
         }
 
         try {
-            const payload: CreateMessageDTO = {
+            const payload: CreateMessageRequest = {
                 content: text,
                 replyToId: replyingTo?.id,
             }
-            await http.client.post<MessageDTO>(`/chats/${targetChatId}/messages`, payload);
+            await http.client.post<MessageResponse>(`/chats/${targetChatId}/messages`, payload);
             setReplyingTo(null);
         } catch (error) {
             console.error("message posting failed", error);

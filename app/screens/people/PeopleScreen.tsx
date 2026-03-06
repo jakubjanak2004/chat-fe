@@ -18,10 +18,10 @@ import GrayTextInput from "../../components/textInput/GrayTextInput";
 import ScrollView = Animated.ScrollView;
 
 type UsersQuery = NonNullable<paths["/users"]["get"]["parameters"]["query"]>;
-type PageChatUserDTO = paths["/users"]["get"]["responses"]["200"]["content"]["application/json"];
-export type ChatUserDTO = NonNullable<PageChatUserDTO["content"]>[number];
-type ChatDTO = paths["/chats/me/person/{username}"]["get"]["responses"]["200"]["content"]["application/json"];
-type CreateChatDTO = paths["/chats/me"]["post"]["requestBody"]["content"]["application/json"]
+type ChatUserPageResponse = paths["/users"]["get"]["responses"]["200"]["content"]["application/json"];
+export type ChatUserResponse = NonNullable<ChatUserPageResponse["content"]>[number];
+type ChatResponse = paths["/chats/me/person/{username}"]["get"]["responses"]["200"]["content"]["application/json"];
+type CreateChatRequest = paths["/chats/me"]["post"]["requestBody"]["content"]["application/json"]
 
 export default function PeopleScreen() {
     const [query, setQuery] = useState("");
@@ -31,7 +31,7 @@ export default function PeopleScreen() {
     // group creation handling
     const [createGroupMode, setCreateGroupMode] = useState(false);
     const [groupName, setGroupName] = useState<string>("");
-    const [selected, setSelected] = useState<Map<string, ChatUserDTO>>(new Map());
+    const [selected, setSelected] = useState<Map<string, ChatUserResponse>>(new Map());
     const selectedUsers = useMemo(() => Array.from(selected.values()), [selected]);
     const selectedCount = selected.size;
 
@@ -42,13 +42,13 @@ export default function PeopleScreen() {
             size: CONFIG.PAGE_SIZE,
             sort: ["username,asc"]
         };
-        const res = await http.client.get<PageChatUserDTO>("/users", {
+        const res = await http.client.get<ChatUserPageResponse>("/users", {
             params,
             paramsSerializer: {indexes: null},
         });
         const data = res.data;
         return {
-            content: (data.content ?? []) as ChatUserDTO[],
+            content: (data.content ?? []) as ChatUserResponse[],
             number: data.number ?? page,
             last: data.last ?? false,
         }
@@ -61,7 +61,7 @@ export default function PeopleScreen() {
         onEndReached,
         onLayout,
         onContentSizeChange,
-    } = usePagedList<ChatUserDTO>(fetchPeoplePage, [normalizedQuery]);
+    } = usePagedList<ChatUserResponse>(fetchPeoplePage, [normalizedQuery]);
 
     const navigation = useNavigation<any>();
 
@@ -120,30 +120,30 @@ export default function PeopleScreen() {
         }
         const members = Array.from(selected.keys());
         cleanGroupSelection();
-        const payload: CreateChatDTO = {
+        const payload: CreateChatRequest = {
             name: groupName,
             membersList: members
         }
-        const res = await http.client.post<ChatDTO>("/chats/me", payload)
+        const res = await http.client.post<ChatResponse>("/chats/me", payload)
         const chat = res.data;
         navigation.navigate("Chat", {id: chat.id})
     };
 
-    const openOrCreateChat = async (user: ChatUserDTO) => {
+    const openOrCreateChat = async (user: ChatUserResponse) => {
         try {
-            const res = await http.client.get<ChatDTO>(`/chats/me/person/${user.username}`);
+            const res = await http.client.get<ChatResponse>(`/chats/me/person/${user.username}`);
             navigation.navigate("Chat", {id: res.data.id});
         } catch {
             navigation.navigate("Chat", {personUsernameFallback: user.username});
         }
     };
 
-    const onPersonPress = (user: ChatUserDTO) => {
+    const onPersonPress = (user: ChatUserResponse) => {
         if (createGroupMode) toggleSelect(user);
         else void openOrCreateChat(user);
     };
 
-    const toggleSelect = (user: ChatUserDTO) => {
+    const toggleSelect = (user: ChatUserResponse) => {
         setSelected(prev => {
             const next = new Map(prev);
             if (next.has(user.username)) next.delete(user.username);

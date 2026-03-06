@@ -16,23 +16,22 @@ import {useAuth} from "../../context/AuthContext";
 import axios from "axios";
 import {paths} from "../../../api/schema";
 
-type LoginDTO = paths["/auth/login"]["post"]["requestBody"]["content"]["application/json"];
-type AuthResponseDTO = paths["/auth/login"]["post"]["responses"]["200"]["content"]["application/json"];
+type LoginRequest = paths["/auth/login"]["post"]["requestBody"]["content"]["application/json"];
+type LoginResponse = paths["/auth/login"]["post"]["responses"]["200"]["content"]["application/json"];
 
-type LoginScreenProps = {
+type Props = {
     navigation: NativeStackNavigationProp<any>;
-    route: RouteProp<any>;
 }
 
-const LoginScreen = ({navigation, route}: LoginScreenProps) => {
+const LoginScreen = ({navigation}: Props) => {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const {login} = useAuth();
 
     async function logInCallback() {
         try {
-            const payload: LoginDTO = {username, password};
-            const res = await http.client.post<AuthResponseDTO>('/auth/login', payload);
+            const payload: LoginRequest = {username, password};
+            const res = await http.client.post<LoginResponse>('/auth/login', payload);
             const data = res.data;
             login(data.token, data);
         } catch (error) {
