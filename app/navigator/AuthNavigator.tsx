@@ -1,18 +1,18 @@
 import LoginScreen from "../screens/auth/LoginScreen";
 import SignUpScreen from "../screens/auth/SignUpScreen";
-import {NavigationContainer} from "@react-navigation/native";
-import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 const Stack = createNativeStackNavigator();
 
-
 export default function AuthNavigator() {
-    return <>
+    return (
         <NavigationContainer>
             <Stack.Navigator
                 screenOptions={{
                     headerShown: true,
-                    animation: "none",
+                    animation: "slide_from_right",
+                    animationDuration: 220,
                     headerStyle: {
                         backgroundColor: "rgb(10,10,10)",
                     },
@@ -23,6 +23,9 @@ export default function AuthNavigator() {
                     },
                     headerTitleAlign: "left",
                     headerShadowVisible: false,
+                    contentStyle: {
+                        backgroundColor: "rgb(10,10,10)",
+                    },
                 }}
             >
                 <Stack.Screen
@@ -31,6 +34,7 @@ export default function AuthNavigator() {
                     options={{
                         title: "Log In",
                         headerBackVisible: false,
+                        animation: "slide_from_left",
                     }}
                 />
                 <Stack.Screen
@@ -39,9 +43,10 @@ export default function AuthNavigator() {
                     options={{
                         title: "Sign Up",
                         headerBackVisible: false,
+                        animation: "slide_from_right",
                     }}
                 />
             </Stack.Navigator>
         </NavigationContainer>
-    </>
+    );
 }
