@@ -20,6 +20,7 @@ import {useChatEvents} from "../../context/ChatsEventsContext";
 import {usePagedList} from "../../hooks/usePagedList";
 import {components, paths} from "../../../api/schema";
 import {RouteProp, useNavigation} from "@react-navigation/native";
+import {NativeStackScreenProps} from "@react-navigation/native-stack";
 
 type MessagePageResponse = paths["/chats/{chatId}/messages"]["get"]["responses"]["200"]["content"]["application/json"];
 type GetMessagesQuery = NonNullable<paths["/chats/{chatId}/messages"]["get"]["parameters"]["query"]>;
@@ -50,16 +51,14 @@ function shouldShowTimeSeparator(messages: MessageResponse[], index: number) {
     return (currMs - nextMs) / (1000 * 60) >= CONFIG.SEPARATOR_GAP_MIN;
 }
 
-type RootStackParamList = {
+export type RootStackParamList = {
     Chat: {
         id?: string;
         personUsernameFallback?: string;
     };
 };
 
-type Props = {
-    route: RouteProp<RootStackParamList>
-}
+type Props = NativeStackScreenProps<RootStackParamList, "Chat">;
 
 export default function ChatScreen({route}: Props) {
     const {user} = useAuth();

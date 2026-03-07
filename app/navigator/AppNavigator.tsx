@@ -11,7 +11,22 @@ import {useAuth} from "../context/AuthContext";
 import {useCallback} from "react";
 import ChatSettingsScreen from "../screens/chats/ChatSettingsScreen";
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+    Chats: undefined;
+    Chat: {
+        id?: string;
+        personUsernameFallback?: string;
+    };
+    ChatSettings: {
+        id: string | null;
+    };
+    People: undefined;
+    Settings: undefined;
+    Login: undefined;
+    Signup: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
     const {token} = useAuth();
@@ -23,7 +38,7 @@ export default function AppNavigator() {
                 <Stack.Navigator
                     screenOptions={{
                         headerShown: true,
-                        animation: "none",
+                        animation: "slide_from_right",
                         headerStyle: {
                             backgroundColor: "rgb(10,10,10)",
                         },

@@ -1,9 +1,7 @@
 import React, {createContext, useContext, useEffect, useMemo, useRef, useState, useCallback} from "react";
 import {stompService} from "../ws/stompService";
 import {notifyMessage} from "../notifications/notifications";
-import {Message} from "../components/message/MessageRow";
-
-type Incoming = { chatId: string; message: any };
+import {MessageResponse} from "../components/message/MessageRow";
 
 type ChatEventsCtx = {
     activeChatId: string | null;
@@ -20,9 +18,9 @@ type ChatEventsCtx = {
 
 const Ctx = createContext<ChatEventsCtx | null>(null);
 
-function dedupeNewestFirst(arr: Message[]): Message[] {
+function dedupeNewestFirst(arr: MessageResponse[]): MessageResponse[] {
     // last write wins for same id
-    const map = new Map<string, Message>();
+    const map = new Map<string, MessageResponse>();
     for (const m of arr) {
         if (!m?.id) continue;
         map.set(m.id, m);
@@ -44,7 +42,7 @@ export function ChatEventsProvider({children, getToken}: { children: React.React
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
     const [lastMessageByChatId, setLastMessageByChatId] = useState<Record<string, any>>({});
     const [unreadByChatId, setUnreadByChatId] = useState<Record<string, number>>({});
-    const [messagesByChatId, setMessagesByChatId] = useState<Record<string, Message[]>>({});
+    const [messagesByChatId, setMessagesByChatId] = useState<Record<string, MessageResponse[]>>({});
 
     const activeChatIdRef = useRef<string | null>(null);
     useEffect(() => {
@@ -64,7 +62,7 @@ export function ChatEventsProvider({children, getToken}: { children: React.React
     }, []);
 
     // todo respect the time ordering in push message
-    const pushMessage = useCallback((chatId: string, msg: Message) => {
+    const pushMessage = useCallback((chatId: string, msg: MessageResponse) => {
         console.log('message:', msg);
         setMessagesByChatId(prev => {
             const chatId = msg.chatId;
@@ -81,7 +79,7 @@ export function ChatEventsProvider({children, getToken}: { children: React.React
     useEffect(() => {
         stompService.connect(getToken, () => {
             stompService.subscribe(`/user/queue/messages`, (frame) => {
-                const message: Message = JSON.parse(frame.body);
+                const message: MessageResponse = JSON.parse(frame.body);
                 const chatId = message.chatId;
 
                 pushMessage(chatId, message);

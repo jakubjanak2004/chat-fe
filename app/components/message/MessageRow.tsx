@@ -5,10 +5,10 @@ import RightBubble from "./RightBubble";
 import LeftBubble from "./LeftBubble";
 import {components} from "../../../api/schema";
 
-export type MessageDTO = components["schemas"]["MessageDTO"];
+export type MessageResponse = components["schemas"]["MessageDTO"];
 
 export type RenderMessage = {
-    msg: MessageDTO;
+    msg: MessageResponse;
     showSep: boolean;
     created: string;
     isMine: boolean;
@@ -23,7 +23,7 @@ function formatTimeLabel(ms: number) {
 
 type Props = {
     row: RenderMessage,
-    onPress: (message: MessageDTO) => void,
+    onPress: (message: MessageResponse) => void,
 }
 
 function MessageRow({row, onPress}: Props) {

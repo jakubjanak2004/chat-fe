@@ -1,7 +1,8 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import type { AxiosHeaders, AxiosError } from "axios";
+import type { AxiosHeaders } from "axios";
 import { Alert } from "react-native";
 import { CONFIG } from "../config/env";
+import qs from "qs";
 
 type Token = string | undefined;
 
@@ -32,6 +33,8 @@ class Http implements HttpClient {
                 "Content-Type": "application/json",
                 Accept: "application/json",
             },
+            paramsSerializer: (params) =>
+                qs.stringify(params, { arrayFormat: "repeat" }),
         });
 
         this.client.interceptors.request.use(this.attachAuth);
