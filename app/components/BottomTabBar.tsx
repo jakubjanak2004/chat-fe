@@ -23,32 +23,32 @@ export default function BottomTabBar() {
                 tint="dark"
             />
 
-            <View className="absolute left-0 right-0 bottom-0 px-10 pb-8 pt-4">
+            <View className="absolute left-0 right-0 bottom-0 px-5 py-6 pt-4">
                 <View className="flex-row items-center justify-between">
                     <Pressable
                         onPress={() => navigation.navigate("Chats")}
-                        className="items-center justify-center"
+                        className="items-center justify-center p-5"
+                        hitSlop={8}
                     >
                         <MessageIcon width={30} height={30} fill={current === "Chats" ? ACTIVE : INACTIVE}/>
                     </Pressable>
 
                     <Pressable
                         onPress={() => navigation.navigate("People")}
-                        className="items-center justify-center"
+                        className="items-center justify-center p-5"
+                        hitSlop={8}
                     >
-                        <PeopleIcon width={30} height={30} fill={current === "People" ? ACTIVE : INACTIVE}/>
+                        <PeopleIcon width={34} height={34} fill={current === "People" ? ACTIVE : INACTIVE}/>
                     </Pressable>
 
                     <Pressable
                         onPress={() => navigation.navigate("Settings")}
-                        className="items-center justify-center"
+                        className="items-center justify-center p-5"
+                        hitSlop={8}
                     >
                         <SettingsIcon width={30} height={30} fill={current === "Settings" ? ACTIVE : INACTIVE}/>
                     </Pressable>
                 </View>
-
-                {/* iOS home indicator spacing */}
-                <View className="mt-5 h-1.5 w-36 self-center rounded-full bg-white/80"/>
             </View>
         </View>
     );
