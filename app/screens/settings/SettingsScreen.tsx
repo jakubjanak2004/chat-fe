@@ -199,31 +199,6 @@ export default function SettingsScreen() {
                         </Text>
                     </View>
 
-                    {dirty ? (
-                        <View className="mt-4 px-5 flex-row items-center justify-end gap-3">
-                            <Pressable
-                                onPress={onCancel}
-                                className="px-4 py-2 rounded-xl bg-neutral-800/70 active:opacity-80"
-                                disabled={saving}
-                            >
-                                <Text className="text-white/80 font-medium">Cancel</Text>
-                            </Pressable>
-
-                            <Pressable
-                                onPress={onSave}
-                                className={[
-                                    "px-4 py-2 rounded-xl active:opacity-80",
-                                    emailOk ? "bg-white" : "bg-white/40",
-                                ].join(" ")}
-                                disabled={saving || !emailOk}
-                            >
-                                <Text className="text-black font-semibold">
-                                    {saving ? "Saving…" : "Save"}
-                                </Text>
-                            </Pressable>
-                        </View>
-                    ) : null}
-
                     <View className="mt-6">
                         {/* ✅ Invitations */}
                         <View className="px-5 mb-6">
@@ -262,6 +237,34 @@ export default function SettingsScreen() {
                             <Text className="text-white/40 text-xs mt-2">
                                 Accepting adds you to the chat. Declining removes the invite.
                             </Text>
+                        </View>
+
+                        {/* Saving section */}
+                        <View className="mt-4 px-5 min-h-[52px] flex-row items-center justify-end gap-3">
+                            {dirty && (
+                                <>
+                                    <Pressable
+                                        onPress={onCancel}
+                                        className="px-4 py-2 rounded-xl bg-neutral-800/70 active:opacity-80"
+                                        disabled={saving}
+                                    >
+                                        <Text className="text-white/80 font-medium">Cancel</Text>
+                                    </Pressable>
+
+                                    <Pressable
+                                        onPress={onSave}
+                                        className={[
+                                            "px-4 py-2 rounded-xl active:opacity-80",
+                                            emailOk ? "bg-white" : "bg-white/40",
+                                        ].join(" ")}
+                                        disabled={saving || !emailOk}
+                                    >
+                                        <Text className="text-black font-semibold">
+                                            {saving ? "Saving…" : "Save"}
+                                        </Text>
+                                    </Pressable>
+                                </>
+                            )}
                         </View>
 
                         {/* Profile fields */}
