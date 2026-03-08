@@ -38,7 +38,7 @@ export default function AppNavigator() {
                 <Stack.Navigator
                     screenOptions={{
                         headerShown: true,
-                        animation: "slide_from_right",
+                        animation: "fade",
                         headerStyle: {
                             backgroundColor: "rgb(10,10,10)",
                         },
@@ -64,6 +64,7 @@ export default function AppNavigator() {
                         component={ChatScreen}
                         options={{
                             title: "Chat",
+                            animation: "slide_from_right",
                         }}
                     />
                     <Stack.Screen
