@@ -10,6 +10,11 @@ import {RouteProp} from "@react-navigation/native";
 import {http} from "../../hooks/http";
 import {useAuth} from "../../context/AuthContext";
 import {paths} from "../../../api/schema";
+import NoInternetConnection from "../../components/NoInternetConnection";
+import {useNetwork} from "../../context/NetworkContext";
+import BackendUnavailable from "../../components/BackendUnavailable";
+import BottomTabBar from "../../components/BottomTabBar";
+import {useBackendStatus} from "../../hooks/UseBackendState";
 
 type SignUpRequest = paths["/auth/signup"]["post"]["requestBody"]["content"]["application/json"];
 type SignUpResponse = paths["/auth/signup"]["post"]["responses"]["200"]["content"]["application/json"];
@@ -21,6 +26,8 @@ type Props = {
 
 const SignUpScreen = ({navigation}: Props) => {
     const {login} = useAuth();
+    const {isOffline} = useNetwork();
+    const {isUnavailable} = useBackendStatus()
     const [username, setUsername] = React.useState<string>("");
     const [firstName, setFistName] = React.useState<string>("");
     const [lastName, setLastName] = React.useState<string>("");
@@ -42,6 +49,14 @@ const SignUpScreen = ({navigation}: Props) => {
         } catch (error) {
             console.error(error);
         }
+    }
+
+    if (isOffline) {
+        return <NoInternetConnection />
+    } else if (isUnavailable) {
+        return <>
+            <BackendUnavailable />
+        </>
     }
 
     return <>

@@ -13,6 +13,10 @@ import ProfilePicDefault from "../../components/people/ProfilePicDefault";
 import {paths} from "../../../api/schema";
 import ScrollView = Animated.ScrollView;
 import ReceivedInvitation from "../../components/chat/ReceivedInvitation";
+import NoInternetConnection from "../../components/NoInternetConnection";
+import {useNetwork} from "../../context/NetworkContext";
+import {useBackendStatus} from "../../hooks/UseBackendState";
+import BackendUnavailable from "../../components/BackendUnavailable";
 
 type UpdateMyProfilePicturePut = paths["/users/me/profile-picture"]["put"];
 type ProfilePictureUpdate = NonNullable<UpdateMyProfilePicturePut["requestBody"]>["content"]["multipart/form-data"];
@@ -26,6 +30,8 @@ function isValidEmail(v: string) {
 
 export default function SettingsScreen() {
     const {user, logout, updateUser, updateProfilePicture} = useAuth();
+    const {isOffline} = useNetwork();
+    const {isUnavailable} = useBackendStatus();
 
     const [invitations, setInvitations] = useState<Invitations>([]);
     const [loadingInvites, setLoadingInvites] = useState(false);
@@ -180,6 +186,18 @@ export default function SettingsScreen() {
             ],
             {cancelable: true}
         );
+    }
+
+    if (isOffline) {
+        return <>
+            <NoInternetConnection/>
+            <BottomTabBar/>
+        </>
+    } else if (isUnavailable) {
+        return <>
+            <BackendUnavailable />
+            <BottomTabBar />
+        </>
     }
 
     return (

@@ -13,6 +13,11 @@ import {useAuth} from "../../context/AuthContext";
 import MembershipRow from "../../components/chat/MembershipRow";
 import InvitePerson from "../../components/people/InvitePerson";
 import InvitationManagement from "../../components/chat/InvitationManagement";
+import {useNetwork} from "../../context/NetworkContext";
+import NoInternetConnection from "../../components/NoInternetConnection";
+import BackendUnavailable from "../../components/BackendUnavailable";
+import BottomTabBar from "../../components/BottomTabBar";
+import {useBackendStatus} from "../../hooks/UseBackendState";
 
 type ChatResponse = paths["/chats/{chatId}"]["get"]["responses"]["200"]["content"]["application/json"];
 type MembershipsResponse = paths["/chats/{chatId}/memberships"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -31,6 +36,8 @@ const CONFIG = {
 
 export default function ChatSettings({route}: any) {
     const {user} = useAuth();
+    const {isOffline} = useNetwork();
+    const {isUnavailable} = useBackendStatus()
     const {id: chatId} = route.params;
 
     const [chat, setChat] = useState<ChatResponse>();
@@ -279,6 +286,14 @@ export default function ChatSettings({route}: any) {
             {text: "Cancel", style: "cancel"},
             {text: "Delete", style: "destructive", onPress: () => memberDelete(username)},
         ]);
+    }
+
+    if (isOffline) {
+        return <NoInternetConnection />
+    } else if (isUnavailable) {
+        return <>
+            <BackendUnavailable />
+        </>
     }
 
     return (

@@ -19,8 +19,13 @@ import {CONFIG} from "../../config/env";
 import {useChatEvents} from "../../context/ChatsEventsContext";
 import {usePagedList} from "../../hooks/usePagedList";
 import {components, paths} from "../../../api/schema";
-import {RouteProp, useNavigation} from "@react-navigation/native";
+import {useNavigation} from "@react-navigation/native";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";
+import NoInternetConnection from "../../components/NoInternetConnection";
+import {useNetwork} from "../../context/NetworkContext";
+import BackendUnavailable from "../../components/BackendUnavailable";
+import BottomTabBar from "../../components/BottomTabBar";
+import {useBackendStatus} from "../../hooks/UseBackendState";
 
 type MessagePageResponse = paths["/chats/{chatId}/messages"]["get"]["responses"]["200"]["content"]["application/json"];
 type GetMessagesQuery = NonNullable<paths["/chats/{chatId}/messages"]["get"]["parameters"]["query"]>;
@@ -62,6 +67,8 @@ type Props = NativeStackScreenProps<RootStackParamList, "Chat">;
 
 export default function ChatScreen({route}: Props) {
     const {user} = useAuth();
+    const {isOffline} = useNetwork();
+    const {isUnavailable} = useBackendStatus()
     const {id, personUsernameFallback} = route.params;
     const {
         setActiveChatId,
@@ -219,6 +226,14 @@ export default function ChatScreen({route}: Props) {
             <MessageRow row={item} onPress={(message) => setReplyingTo(message)}/>,
         []
     );
+
+    if (isOffline) {
+        return <NoInternetConnection />
+    } else if (isUnavailable) {
+        return <>
+            <BackendUnavailable />
+        </>
+    }
 
     return (
         <View className="flex-1 bg-black">

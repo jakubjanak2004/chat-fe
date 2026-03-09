@@ -16,6 +16,10 @@ import {paths} from "../../../api/schema";
 import ProfilePic from "../../components/people/ProfilePic";
 import GrayTextInput from "../../components/textInput/GrayTextInput";
 import ScrollView = Animated.ScrollView;
+import {useNetwork} from "../../context/NetworkContext";
+import NoInternetConnection from "../../components/NoInternetConnection";
+import BackendUnavailable from "../../components/BackendUnavailable";
+import {useBackendStatus} from "../../hooks/UseBackendState";
 
 type UsersQuery = NonNullable<paths["/users"]["get"]["parameters"]["query"]>;
 type ChatUserPageResponse = paths["/users"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -24,6 +28,8 @@ type ChatResponse = paths["/chats/me/person/{username}"]["get"]["responses"]["20
 type CreateChatRequest = paths["/chats/me"]["post"]["requestBody"]["content"]["application/json"]
 
 export default function PeopleScreen() {
+    const {isOffline} = useNetwork();
+    const {isUnavailable} = useBackendStatus()
     const [query, setQuery] = useState("");
     const [debouncedQuery] = useDebounce(query, 350);
     const normalizedQuery = useMemo(() => debouncedQuery.trim(), [debouncedQuery]);
@@ -151,6 +157,18 @@ export default function PeopleScreen() {
             return next;
         });
     };
+
+    if (isOffline) {
+        return <>
+            <NoInternetConnection />
+            <BottomTabBar />
+        </>
+    } else if (isUnavailable) {
+        return <>
+            <BackendUnavailable />
+            <BottomTabBar />
+        </>
+    }
 
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>

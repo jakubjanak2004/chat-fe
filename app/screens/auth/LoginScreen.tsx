@@ -15,6 +15,11 @@ import {http} from "../../hooks/http";
 import {useAuth} from "../../context/AuthContext";
 import axios from "axios";
 import {paths} from "../../../api/schema";
+import {useNetwork} from "../../context/NetworkContext";
+import NoInternetConnection from "../../components/NoInternetConnection";
+import BackendUnavailable from "../../components/BackendUnavailable";
+import BottomTabBar from "../../components/BottomTabBar";
+import {useBackendStatus} from "../../hooks/UseBackendState";
 
 type LoginRequest = paths["/auth/login"]["post"]["requestBody"]["content"]["application/json"];
 type LoginResponse = paths["/auth/login"]["post"]["responses"]["200"]["content"]["application/json"];
@@ -27,6 +32,8 @@ const LoginScreen = ({navigation}: Props) => {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const {login} = useAuth();
+    const {isOffline} = useNetwork();
+    const {isUnavailable} = useBackendStatus();
 
     async function logInCallback() {
         try {
@@ -42,6 +49,14 @@ const LoginScreen = ({navigation}: Props) => {
                 Alert.alert("The username or password is incorrect!");
             }
         }
+    }
+
+    if (isOffline) {
+        return <NoInternetConnection />
+    } else if (isUnavailable) {
+        return <>
+            <BackendUnavailable />
+        </>
     }
 
     return <>

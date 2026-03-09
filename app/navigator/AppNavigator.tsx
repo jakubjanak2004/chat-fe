@@ -49,6 +49,9 @@ export default function AppNavigator() {
                         },
                         headerTitleAlign: "left",
                         headerShadowVisible: false,
+                        contentStyle: {
+                            backgroundColor: "rgb(10,10,10)",
+                        },
                     }}
                 >
                     <Stack.Screen

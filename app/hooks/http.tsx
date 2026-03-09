@@ -1,16 +1,30 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import axios, {
+    AxiosError,
+    AxiosInstance,
+    InternalAxiosRequestConfig,
+} from "axios";
 import type { AxiosHeaders } from "axios";
 import { Alert } from "react-native";
 import { CONFIG } from "../config/env";
 import qs from "qs";
+import { networkState } from "../context/NetworkState";
+import { backendState } from "../context/BackendState";
 
 type Token = string | undefined;
+
+export type AppError =
+    | { type: "offline"; message: string }
+    | { type: "timeout"; message: string }
+    | { type: "backend_unreachable"; message: string; status?: number }
+    | { type: "server"; message: string; status?: number }
+    | { type: "unknown"; message: string };
 
 interface HttpClient {
     setToken(t?: string | null): void;
     clearToken(): void;
     get token(): Token;
     readonly client: AxiosInstance;
+    resetOfflineAlert(): void;
 }
 
 function isAxiosHeaders(h: unknown): h is AxiosHeaders {
@@ -21,11 +35,18 @@ class Http implements HttpClient {
     private _token: Token = undefined;
     public readonly client: AxiosInstance;
 
-    // prevents showing multiple alerts if many requests fail at once
-    // allows the pop-up to be shown only after user pressed Ok
-    private networkAlertShown = false;
+    private offlineAlertShown = false;
 
     constructor() {
+        networkState.subscribe((isOffline) => {
+            if (!isOffline) {
+                this.offlineAlertShown = false;
+            } else {
+                // offline is not the same as backend unavailable
+                backendState.markHealthy();
+            }
+        });
+
         this.client = axios.create({
             baseURL: CONFIG.API_URL,
             timeout: CONFIG.TIMEOUT_MS,
@@ -38,12 +59,29 @@ class Http implements HttpClient {
         });
 
         this.client.interceptors.request.use(this.attachAuth);
+        this.client.interceptors.request.use(this.blockWhenOffline);
 
         this.client.interceptors.response.use(
-            (r) => r,
+            (response) => {
+                backendState.markHealthy();
+                return response;
+            },
             (err) => {
-                this.handleGlobalNetworkError(err);
-                return Promise.reject(err);
+                const appError = this.mapAxiosError(err);
+
+                if (
+                    appError.type === "timeout" ||
+                    appError.type === "backend_unreachable" ||
+                    (appError.type === "server" &&
+                        (appError.status === 502 ||
+                            appError.status === 503 ||
+                            appError.status === 504))
+                ) {
+                    backendState.markUnavailable(appError.message);
+                }
+
+                this.handleGlobalNetworkError(appError);
+                return Promise.reject(appError);
             }
         );
     }
@@ -58,6 +96,10 @@ class Http implements HttpClient {
 
     get token(): Token {
         return this._token;
+    }
+
+    resetOfflineAlert(): void {
+        this.offlineAlertShown = false;
     }
 
     private attachAuth = (cfg: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
@@ -75,34 +117,85 @@ class Http implements HttpClient {
         return cfg;
     };
 
-    private handleGlobalNetworkError(err: unknown) {
-        if (!axios.isAxiosError(err)) return;
+    private blockWhenOffline = (
+        cfg: InternalAxiosRequestConfig
+    ): InternalAxiosRequestConfig | Promise<never> => {
+        if (!networkState.offline) return cfg;
 
-        // If we have a response, it’s not a "network error"
-        if (err.response) return;
+        return Promise.reject<AppError>({
+            type: "offline",
+            message: "No internet connection.",
+        });
+    };
 
-        // No response => network issue / DNS / refused / offline / CORS (web) / etc.
-        // Timeout is usually ECONNABORTED in axios
-        const isTimeout = err.code === "ECONNABORTED";
+    private mapAxiosError(error: unknown): AppError {
+        // already normalized by us
+        if (
+            error &&
+            typeof error === "object" &&
+            "type" in error &&
+            typeof (error as any).type === "string"
+        ) {
+            return error as AppError;
+        }
 
-        if (this.networkAlertShown) return;
-        this.networkAlertShown = true;
+        if (!axios.isAxiosError(error)) {
+            return {
+                type: "unknown",
+                message: "Unexpected error.",
+            };
+        }
 
-        Alert.alert(
-            isTimeout ? "Timeout" : "Connection problem",
-            isTimeout
-                ? "The server took too long to respond. Please try again."
-                : "Cannot connect to the server. Check your internet connection (or that the server is running).",
-            [
-                {
-                    text: "OK",
-                    onPress: () => {
-                        // allow future alerts again (next failure can show)
-                        this.networkAlertShown = false;
-                    },
-                },
-            ]
-        );
+        const err = error as AxiosError<any>;
+
+        // no response from server
+        if (!err.response) {
+            if (networkState.offline) {
+                return {
+                    type: "offline",
+                    message: "No internet connection.",
+                };
+            }
+
+            if (err.code === "ECONNABORTED") {
+                return {
+                    type: "timeout",
+                    message: "The server took too long to respond. Please try again.",
+                };
+            }
+
+            return {
+                type: "backend_unreachable",
+                message: "We’re having trouble reaching the server. Please try again later.",
+            };
+        }
+
+        const status = err.response.status;
+
+        if (status === 502 || status === 503 || status === 504) {
+            return {
+                type: "backend_unreachable",
+                status,
+                message: "Service temporarily unavailable. Please try again later.",
+            };
+        }
+
+        return {
+            type: "server",
+            status,
+            message:
+                err.response.data?.message ||
+                `Request failed with status ${status}.`,
+        };
+    }
+
+    private handleGlobalNetworkError(err: AppError) {
+        if (err.type !== "offline") return;
+        if (this.offlineAlertShown) return;
+
+        this.offlineAlertShown = true;
+
+        Alert.alert("No internet connection", err.message, [{ text: "OK" }]);
     }
 }
 

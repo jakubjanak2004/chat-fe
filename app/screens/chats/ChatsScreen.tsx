@@ -13,12 +13,18 @@ import {CONFIG} from "../../config/env";
 import {usePagedList} from "../../hooks/usePagedList";
 import {useChatEvents} from "../../context/ChatsEventsContext";
 import {paths} from "../../../api/schema";
+import {useNetwork} from "../../context/NetworkContext";
+import NoInternetConnection from "../../components/NoInternetConnection";
+import BackendUnavailable from "../../components/BackendUnavailable";
+import {useBackendStatus} from "../../hooks/UseBackendState";
 
 type ChatQuery = NonNullable<paths["/chats/me"]["get"]["parameters"]["query"]>;
 type ChatsPageResponse = paths["/chats/me"]["get"]["responses"]["200"]["content"]["application/json"];
 
 export default function ChatsScreen() {
     const [query, setQuery] = useState("");
+    const {isOffline} = useNetwork();
+    const {isUnavailable} = useBackendStatus()
     const [debouncedQuery] = useDebounce(query, 350);
     const normalizedQuery = useMemo(() => debouncedQuery.trim(), [debouncedQuery]);
 
@@ -54,6 +60,18 @@ export default function ChatsScreen() {
     } = usePagedList<Chat>(fetchChatsPage, [normalizedQuery], {
         autoFillIfNotScrollable: false,
     });
+
+    if (isOffline) {
+        return <>
+            <NoInternetConnection />
+            <BottomTabBar/>
+        </>
+    } else if (isUnavailable) {
+        return <>
+            <BackendUnavailable />
+            <BottomTabBar />
+        </>
+    }
 
     return (
         <SafeAreaView className="flex-1 bg-black" edges={["bottom"]}>
