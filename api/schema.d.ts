@@ -132,6 +132,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -372,12 +388,16 @@ export interface components {
         AuthResponseDTO: {
             /** Format: uuid */
             userId: string;
-            token: string;
+            accessToken: string;
+            refreshToken: string;
             username: string;
             email: string;
             firstName: string;
             lastName: string;
             hasProfilePicture: boolean;
+        };
+        RefreshRequestDTO: {
+            refreshToken: string;
         };
         LoginDTO: {
             username: string;
@@ -388,10 +408,10 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
@@ -402,19 +422,19 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
+            unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
         };
         SortObject: {
-            sorted?: boolean;
             unsorted?: boolean;
+            sorted?: boolean;
             empty?: boolean;
         };
         PageMessageDTO: {
@@ -422,10 +442,10 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
@@ -452,10 +472,10 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
@@ -755,6 +775,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SignUpDTO"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponseDTO"];
+                };
+            };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequestDTO"];
             };
         };
         responses: {

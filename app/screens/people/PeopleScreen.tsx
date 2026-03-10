@@ -2,16 +2,16 @@ import React, {useLayoutEffect, useMemo, useState} from "react";
 import {ActivityIndicator, Animated, FlatList, Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {useDebounce} from "use-debounce";
-import {CONFIG} from "../../config/env";
+import {CONFIG} from "../../config/Env";
 
 import BottomTabBar from "../../components/BottomTabBar";
 import SearchTextInput from "../../components/textInput/SearchTextInput";
 import PersonRow from "../../components/people/PersonRow";
 import FlatListDivider from "../../components/divider/FlatListDivider";
-import {http} from "../../hooks/http";
+import {http} from "../../hooks/Http";
 import {useNavigation} from "@react-navigation/native";
 import AddGroupIcon from "../../components/icon/AddGroupIcon";
-import {usePagedList} from "../../hooks/usePagedList";
+import {usePagedList} from "../../hooks/UsePagedList";
 import {paths} from "../../../api/schema";
 import ProfilePic from "../../components/people/ProfilePic";
 import GrayTextInput from "../../components/textInput/GrayTextInput";
@@ -119,7 +119,6 @@ export default function PeopleScreen() {
     };
 
     const proceedCreateGroup = async () => {
-        console.log(groupName);
         if (!groupName) {
             // todo handle blank group name
             return;

@@ -1,4 +1,4 @@
-import {CONFIG} from "../../config/env";
+import {CONFIG} from "../../config/Env";
 import {Image} from "react-native";
 import ProfilePicDefault from "./ProfilePicDefault";
 import React from "react";

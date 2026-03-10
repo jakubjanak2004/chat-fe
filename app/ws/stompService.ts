@@ -1,5 +1,5 @@
 import { Client, IMessage, StompSubscription } from "@stomp/stompjs";
-import {CONFIG} from "../config/env";
+import {CONFIG} from "../config/Env";
 import SockJS from "sockjs-client";
 
 type Unsubscribe = () => void;

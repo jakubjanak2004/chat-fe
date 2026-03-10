@@ -29,8 +29,8 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
-    const {token} = useAuth();
-    const getToken = useCallback(() => token, [token]);
+    const {accessToken} = useAuth();
+    const getToken = useCallback(() => accessToken, [accessToken]);
 
     return <>
         <ChatEventsProvider getToken={getToken}>

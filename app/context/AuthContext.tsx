@@ -1,9 +1,10 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {http} from "../hooks/http";
 import {stompService} from "../ws/stompService";
 import {paths} from "../../api/schema";
+import {http} from "../hooks/Http";
+import {clearRefreshToken, getRefreshToken, saveRefreshToken} from "./TokenStorage";
 
-type Token = string | null;
+type AccessToken = string | null;
 
 export interface User {
     userId: string;
@@ -14,20 +15,23 @@ export interface User {
     hasProfilePicture: boolean;
 }
 
-type UpdateChatUserDTO = paths["/users/me"]["put"]["requestBody"]["content"]["application/json"]
+type UpdateChatUserDTO =
+    paths["/users/me"]["put"]["requestBody"]["content"]["application/json"];
+type RefreshResponse = paths["/auth/refresh"]["post"]["responses"]["200"]["content"]["application/json"];
 
-// todo import from paths
 export interface ProfilePicUpdate {
     hasProfilePicture: boolean;
 }
 
 export interface AuthContextValue {
     loggedIn: boolean;
-    token: Token;
+    initializing: boolean;
+    accessToken: AccessToken;
     user: User;
 
-    login: (token: string, user: User) => void;
-    logout: () => void;
+    login: (accessToken: string, refreshToken: string, user: User) => Promise<void>;
+    logout: () => Promise<void>;
+    refreshLogin: () => Promise<boolean>;
 
     updateUser: (input: UpdateChatUserDTO) => Promise<void>;
     updateProfilePicture: (input: ProfilePicUpdate) => void;
@@ -35,70 +39,127 @@ export interface AuthContextValue {
 
 const AuthCtx = createContext<AuthContextValue | undefined>(undefined);
 
-const emptyUser = {
+const emptyUser: User = {
     userId: "",
     username: "",
     email: "",
     firstName: "",
     lastName: "",
     hasProfilePicture: false,
-}
+};
 
 export function AuthProvider({children}: { children: React.ReactNode }) {
-    const [token, setToken] = useState<Token>(null);
+    const [accessToken, setAccessToken] = useState<AccessToken>(null);
     const [user, setUser] = useState<User>(emptyUser);
+    const [initializing, setInitializing] = useState(true);
 
     useEffect(() => {
-        http.setToken(token);
-    }, [token]);
+        http.setToken(accessToken);
+    }, [accessToken]);
 
-    // Connect/disconnect websocket depending on auth state
     useEffect(() => {
-        if (token) {
+        if (accessToken) {
             stompService.connect(
-                () => token,
+                () => accessToken,
                 () => console.log("WS connected"),
                 (err) => console.warn("WS error", err),
             );
         } else {
             stompService.disconnect();
         }
-    }, [token]);
+    }, [accessToken]);
+
+    const logout = async () => {
+        setAccessToken(null);
+        setUser(emptyUser);
+        await clearRefreshToken();
+    };
+
+    const refreshLogin = async (): Promise<boolean> => {
+        try {
+            const refreshToken = await getRefreshToken();
+
+            if (!refreshToken) {
+                return false;
+            }
+
+            const res = await http.client.post<RefreshResponse>("/auth/refresh", {
+                refreshToken,
+            });
+
+            const newAccessToken: string = res.data.accessToken;
+            const newRefreshToken: string = res.data.refreshToken ?? refreshToken
+            const refreshedUser: User = res.data;
+
+            setAccessToken(newAccessToken);
+            setUser(refreshedUser);
+
+            if (newRefreshToken !== refreshToken) {
+                await saveRefreshToken(newRefreshToken);
+            }
+
+            return true;
+        } catch (err) {
+            console.warn("Refresh login failed", err);
+            await logout();
+            return false;
+        }
+    };
+
+    useEffect(() => {
+        const bootstrapAuth = async () => {
+            try {
+                const refreshToken = await getRefreshToken();
+
+                if (!refreshToken) {
+                    return;
+                }
+
+                await refreshLogin();
+            } finally {
+                setInitializing(false);
+            }
+        };
+
+        bootstrapAuth();
+    }, []);
 
     const value = useMemo<AuthContextValue>(() => ({
-        loggedIn: !!token,
-        token,
+        loggedIn: !!accessToken,
+        initializing,
+        accessToken,
         user,
 
-        login: (t, u) => {
-            setToken(t);
-            setUser(u);
+        login: async (newAccessToken, refreshToken, newUser) => {
+            setAccessToken(newAccessToken);
+            setUser(newUser);
+            await saveRefreshToken(refreshToken);
         },
 
-        logout: () => {
-            setToken(null);
-            setUser(emptyUser);
-        },
+        logout,
+        refreshLogin,
 
         updateUser: async ({firstName, lastName, email}: UpdateChatUserDTO) => {
             const payload: UpdateChatUserDTO = {
                 firstName,
                 lastName,
                 email,
-            }
-            await http.client.put('/users/me', payload);
-            // keep local state in sync
-            setUser((prev) =>
-                prev
-                    ? {...prev, firstName, lastName, email}
-                    : prev
-            );
+            };
+
+            await http.client.put("/users/me", payload);
+
+            setUser((prev) => ({
+                ...prev,
+                firstName,
+                lastName,
+                email,
+            }));
         },
 
-        updateProfilePicture: ({ hasProfilePicture }: ProfilePicUpdate) => {
-            setUser(prev => ({ ...prev, hasProfilePicture }));
+        updateProfilePicture: ({hasProfilePicture}: ProfilePicUpdate) => {
+            setUser((prev) => ({...prev, hasProfilePicture}));
         },
-    }), [token, user]);
+    }), [accessToken, user, initializing]);
 
     return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

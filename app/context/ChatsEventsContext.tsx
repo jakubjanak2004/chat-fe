@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useEffect, useMemo, useRef, useState, useCallback} from "react";
 import {stompService} from "../ws/stompService";
-import {notifyMessage} from "../notifications/notifications";
+import {notifyMessage} from "../notifications/Notifications";
 import {MessageResponse} from "../components/message/MessageRow";
 
 type ChatEventsCtx = {
@@ -63,7 +63,6 @@ export function ChatEventsProvider({children, getToken}: { children: React.React
 
     // todo respect the time ordering in push message
     const pushMessage = useCallback((chatId: string, msg: MessageResponse) => {
-        console.log('message:', msg);
         setMessagesByChatId(prev => {
             const chatId = msg.chatId;
             const existing = prev[chatId] ?? [];
@@ -85,7 +84,6 @@ export function ChatEventsProvider({children, getToken}: { children: React.React
                 pushMessage(chatId, message);
                 setLastMessageByChatId(prev => {
                     const next = {...prev, [chatId]: message};
-                    console.log("lastMessageByChatId next =", next);
                     return next;
                 });
 

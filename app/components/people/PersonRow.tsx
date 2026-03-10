@@ -1,6 +1,6 @@
 import React from "react";
 import {View, Text, Image, Pressable} from "react-native";
-import {CONFIG} from "../../config/env";
+import {CONFIG} from "../../config/Env";
 import ProfilePicDefault from "./ProfilePicDefault";
 import ProfilePic from "./ProfilePic";
 import {ChatUserResponse} from "../../screens/people/PeopleScreen";

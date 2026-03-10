@@ -5,7 +5,7 @@ import axios, {
 } from "axios";
 import type { AxiosHeaders } from "axios";
 import { Alert } from "react-native";
-import { CONFIG } from "../config/env";
+import { CONFIG } from "../config/Env";
 import qs from "qs";
 import { networkState } from "../context/NetworkState";
 import { backendState } from "../context/BackendState";

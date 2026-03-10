@@ -14,10 +14,10 @@ import {Ionicons} from "@expo/vector-icons";
 
 import MessageRow, {RenderMessage} from "../../components/message/MessageRow";
 import {useAuth} from "../../context/AuthContext";
-import {http} from "../../hooks/http";
-import {CONFIG} from "../../config/env";
+import {http} from "../../hooks/Http";
+import {CONFIG} from "../../config/Env";
 import {useChatEvents} from "../../context/ChatsEventsContext";
-import {usePagedList} from "../../hooks/usePagedList";
+import {usePagedList} from "../../hooks/UsePagedList";
 import {components, paths} from "../../../api/schema";
 import {useNavigation} from "@react-navigation/native";
 import {NativeStackScreenProps} from "@react-navigation/native-stack";

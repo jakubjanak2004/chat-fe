@@ -7,7 +7,7 @@ import GrayTextInput from "../../components/textInput/GrayTextInput";
 import Divider from "../../components/divider/Divider";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
-import {http} from "../../hooks/http";
+import {http} from "../../hooks/Http";
 import {useAuth} from "../../context/AuthContext";
 import {paths} from "../../../api/schema";
 import NoInternetConnection from "../../components/NoInternetConnection";
@@ -45,7 +45,7 @@ const SignUpScreen = ({navigation}: Props) => {
             }
             const res = await http.client.post<SignUpResponse>('/auth/signup', payload);
             const data = res.data;
-            login(data.token, data);
+            login(data.accessToken, data.refreshToken, data);
         } catch (error) {
             console.error(error);
         }

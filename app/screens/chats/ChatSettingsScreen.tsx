@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from "react";
-import {http} from "../../hooks/http";
+import {http} from "../../hooks/Http";
 import {paths} from "../../../api/schema";
 import {
     ActivityIndicator,
@@ -229,7 +229,6 @@ export default function ChatSettings({route}: any) {
     }
 
     async function handleInvitationDelete(username: string) {
-        console.log(chatId, username)
         await http.client.delete(`/chats/${chatId}/invitations/${username}`);
 
         setInvitations((prev) =>

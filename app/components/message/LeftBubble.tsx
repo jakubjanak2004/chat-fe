@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, Image } from "react-native";
-import { CONFIG } from "../../config/env";
+import { CONFIG } from "../../config/Env";
 import ProfilePicDefault from "../people/ProfilePicDefault";
 import {components} from "../../../api/schema";
 
