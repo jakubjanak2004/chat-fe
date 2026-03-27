@@ -1,8 +1,7 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useMemo, useState} from "react";
 import {ActivityIndicator, FlatList, Text, View} from "react-native";
-import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import {SafeAreaView} from "react-native-safe-area-context";
 import {useDebounce} from "use-debounce";
-import {useFocusEffect} from "@react-navigation/core";
 
 import BottomTabBar from "../../components/BottomTabBar";
 import ChatRow, {Chat} from "../../components/chat/ChatRow";
@@ -44,7 +43,6 @@ export default function ChatsScreen() {
             paramsSerializer: {indexes: null},
         });
         const data = res.data;
-        console.log('data', data, 'res.status', res.status);
 
         return {
             content: (data.content ?? []) as Chat[],
