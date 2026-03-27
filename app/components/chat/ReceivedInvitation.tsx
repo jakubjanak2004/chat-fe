@@ -1,4 +1,4 @@
-import {ActivityIndicator, Alert, Pressable, View, Text} from "react-native";
+import {ActivityIndicator, Alert, Platform, Pressable, View, Text} from "react-native";
 import {Invitations} from "../../screens/settings/SettingsScreen";
 
 type Invitation = Invitations[number];
@@ -12,6 +12,26 @@ type Props = {
 
 export default function ReceivedInvitation({inv, inviteActionId, onCancelInvitation, onAcceptInvitation}: Props) {
     const busy = inviteActionId === inv.id;
+    const confirmDecline = () => {
+        if (Platform.OS === "web") {
+            const ok = window.confirm(`Decline invite to "${inv.chatName}"?`);
+            if (ok) onCancelInvitation(inv);
+            return;
+        }
+
+        Alert.alert(
+            "Cancel invitation?",
+            `Decline invite to "${inv.chatName}"?`,
+            [
+                {text: "No", style: "cancel"},
+                {
+                    text: "Decline",
+                    style: "destructive",
+                    onPress: () => onCancelInvitation(inv)
+                },
+            ]
+        );
+    };
 
     return (
         <View className="px-4 py-3 border-b border-white/10">
@@ -27,20 +47,7 @@ export default function ReceivedInvitation({inv, inviteActionId, onCancelInvitat
             <View className="flex-row gap-2 mt-3 justify-end">
                 <Pressable
                     disabled={busy}
-                    onPress={() =>
-                        Alert.alert(
-                            "Cancel invitation?",
-                            `Decline invite to "${inv.chatName}"?`,
-                            [
-                                {text: "No", style: "cancel"},
-                                {
-                                    text: "Decline",
-                                    style: "destructive",
-                                    onPress: () => onCancelInvitation(inv)
-                                },
-                            ]
-                        )
-                    }
+                    onPress={confirmDecline}
                     className={`rounded-xl px-3 py-2 border ${
                         busy ? "border-white/10 bg-white/5" : "border-red-500/40 bg-red-500/10 active:bg-red-500/20"
                     }`}
