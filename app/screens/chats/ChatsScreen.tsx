@@ -17,6 +17,7 @@ import {useNetwork} from "../../context/NetworkContext";
 import NoInternetConnection from "../../components/NoInternetConnection";
 import BackendUnavailable from "../../components/BackendUnavailable";
 import {useBackendStatus} from "../../hooks/UseBackendState";
+import {useAuth} from "../../context/AuthContext";
 
 type ChatQuery = NonNullable<paths["/chats/me"]["get"]["parameters"]["query"]>;
 type ChatsPageResponse = paths["/chats/me"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -25,6 +26,7 @@ export default function ChatsScreen() {
     const [query, setQuery] = useState("");
     const {isOffline} = useNetwork();
     const {isUnavailable} = useBackendStatus()
+    const {accessToken} = useAuth();
     const [debouncedQuery] = useDebounce(query, 350);
     const normalizedQuery = useMemo(() => debouncedQuery.trim(), [debouncedQuery]);
 
@@ -42,6 +44,7 @@ export default function ChatsScreen() {
             paramsSerializer: {indexes: null},
         });
         const data = res.data;
+        console.log('data', data, 'res.status', res.status);
 
         return {
             content: (data.content ?? []) as Chat[],
@@ -57,7 +60,7 @@ export default function ChatsScreen() {
         onEndReached,
         onLayout,
         onContentSizeChange,
-    } = usePagedList<Chat>(fetchChatsPage, [normalizedQuery], {
+    } = usePagedList<Chat>(fetchChatsPage, [normalizedQuery, accessToken], {
         autoFillIfNotScrollable: false,
     });
 
@@ -90,7 +93,7 @@ export default function ChatsScreen() {
                 )}
                 ItemSeparatorComponent={() => <FlatListDivider/>}
                 className="flex-1"
-                onEndReached={onEndReached}
+                onEndReached={chats.length >= CONFIG.PAGE_SIZE ? onEndReached : undefined}
                 onEndReachedThreshold={0.6}
                 onLayout={onLayout}
                 onContentSizeChange={onContentSizeChange}
