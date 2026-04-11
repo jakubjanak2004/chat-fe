@@ -78,6 +78,7 @@ class Http implements HttpClient {
                             appError.status === 504))
                 ) {
                     backendState.markUnavailable(appError.message);
+                    console.log('appError:', appError)
                 }
 
                 this.handleGlobalNetworkError(appError);

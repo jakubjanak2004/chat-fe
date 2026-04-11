@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from "react";
-import {View, Text, Image, Pressable, Alert, ActivityIndicator, Animated} from "react-native";
+import {View, Text, Image, Pressable, Alert, ActivityIndicator, Animated, Platform} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import BottomTabBar from "../../components/BottomTabBar";
 import FormTextInput from "../../components/textInput/FormTextInput";
@@ -177,6 +177,13 @@ export default function SettingsScreen() {
     }, []);
 
     function onLogOut() {
+        if (Platform.OS === "web") {
+            const ok = window.confirm("Do you want to log out?")
+            if (ok) {
+                logout();
+            }
+            return;
+        }
         Alert.alert(
             "Log out?",
             "Are you sure you want to log out?",
